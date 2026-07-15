@@ -67,10 +67,10 @@ function formatCurrency(value?: number) {
     : new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(value);
 }
 
-function ResourceGroup({ title, eyebrow, links }: { title: string; eyebrow: string; links: ResourceLink[] }) {
+function ResourceGroup({ title, eyebrow, links, tone }: { title: string; eyebrow: string; links: ResourceLink[]; tone: "photos" | "hazards" | "records" | "insurance" }) {
   const availableLinks = links.filter((link) => Boolean(link.href));
   return (
-    <section className="resource-section">
+    <section className={`resource-section resource-section--${tone}`}>
       <div className="section-heading">
         <p>{eyebrow}</p>
         <h3>{title}</h3>
@@ -86,7 +86,7 @@ function ResourceGroup({ title, eyebrow, links }: { title: string; eyebrow: stri
                 <small>{link.description}</small>
                 <em>{link.source}</em>
               </span>
-              <ExternalLink size={17} aria-hidden="true" />
+              <span className="resource-arrow"><ExternalLink size={16} aria-hidden="true" /></span>
             </a>
           );
         })}
@@ -157,7 +157,7 @@ export function App() {
       <header className="site-header">
         <a className="brand" href="https://www.billlayneinsurance.com/" aria-label="Bill Layne Insurance home">
           <span className="brand-mark"><Home size={20} /></span>
-          <span><strong>Bill Layne Insurance</strong><small>North Carolina property resource</small></span>
+          <span><strong>Bill Layne Insurance</strong><small>Find My Home Information</small></span>
         </a>
         <div className="header-actions">
           <a href="tel:3368351993"><Phone size={16} />336-835-1993</a>
@@ -170,17 +170,17 @@ export function App() {
           <div className="hero-image" aria-hidden="true" />
           <div className="hero-overlay" />
           <div className="hero-content">
-            <p className="eyebrow">Free North Carolina property resource</p>
-            <h1>Find Your North Carolina Home Information</h1>
+            <p className="hero-kicker"><MapPin size={15} />Free North Carolina property resource</p>
+            <h1>Find Your North Carolina <span>Home Information</span></h1>
             <p className="hero-lead">Enter an address to find available property records, maps, aerial photos, flood resources, and county links in one place.</p>
-            <form className="search-form" onSubmit={handleSubmit}>
+            <form id="property-search" className="search-form" onSubmit={handleSubmit}>
               <label className="search-input-wrap">
                 <Search size={20} aria-hidden="true" />
                 <span className="sr-only">North Carolina property address</span>
                 <input
                   value={address}
                   onChange={(event) => setAddress(event.target.value)}
-                  placeholder="Enter a street address, city, and NC"
+                  placeholder="Example: 123 Main St, Elkin, NC"
                   autoComplete="street-address"
                 />
               </label>
@@ -198,9 +198,9 @@ export function App() {
         </section>
 
         <section className="scope-band">
-          <div><strong>31 integrated counties</strong><span>Automatic parcel details where supported</span></div>
-          <div><strong>Statewide hazard tools</strong><span>FEMA and North Carolina resources</span></div>
-          <div><strong>Public information only</strong><span>No agency notes or customer files</span></div>
+          <div><span className="scope-icon"><Map size={19} /></span><span className="scope-copy"><strong>31 integrated counties</strong><span>Automatic parcel details where supported</span></span></div>
+          <div><span className="scope-icon"><ShieldCheck size={19} /></span><span className="scope-copy"><strong>Statewide hazard tools</strong><span>FEMA and North Carolina resources</span></span></div>
+          <div><span className="scope-icon"><CheckCircle2 size={19} /></span><span className="scope-copy"><strong>Public information only</strong><span>No agency notes or customer files</span></span></div>
         </section>
 
         {error ? (
@@ -254,10 +254,10 @@ export function App() {
               </div>
             </section>
 
-            <ResourceGroup title="See the home and surrounding property" eyebrow="Photos and maps" links={resources.photos} />
-            <ResourceGroup title="Review location-based hazard information" eyebrow="Hazard resources" links={resources.hazards} />
-            <ResourceGroup title="Open available county records" eyebrow="Official records" links={resources.records} />
-            <ResourceGroup title="Prepare before and after a home insurance claim" eyebrow="Insurance resources" links={AGENCY_RESOURCES} />
+            <ResourceGroup title="See the home and surrounding property" eyebrow="Photos and maps" links={resources.photos} tone="photos" />
+            <ResourceGroup title="Review location-based hazard information" eyebrow="Hazard resources" links={resources.hazards} tone="hazards" />
+            <ResourceGroup title="Open available county records" eyebrow="Official records" links={resources.records} tone="records" />
+            <ResourceGroup title="Prepare before and after a home insurance claim" eyebrow="Insurance resources" links={AGENCY_RESOURCES} tone="insurance" />
 
             <section className="closing-band">
               <div>
@@ -273,11 +273,14 @@ export function App() {
           </div>
         ) : (
           <section className="pre-search">
-            <div className="section-heading"><p>What you can find</p><h2>One search, organized destinations</h2></div>
+            <div className="pre-search-heading">
+              <div className="section-heading"><p>What you can find</p><h2>One address. The useful property resources, organized.</h2></div>
+              <p className="section-intro">Start with the address above. We will connect you to the public information available for that property and county.</p>
+            </div>
             <div className="pre-search-grid">
-              <div><Camera size={23} /><strong>Photos and aerial maps</strong><span>Street View, county GIS imagery, and available listing searches.</span></div>
-              <div><Waves size={23} /><strong>Flood and hazard tools</strong><span>Official FEMA and North Carolina risk resources.</span></div>
-              <div><FileSearch size={23} /><strong>County public records</strong><span>Available parcel maps, property cards, assessments, and deeds.</span></div>
+              <div><span className="feature-icon"><Camera size={23} /></span><strong>Photos and aerial maps</strong><span>Street View, county GIS imagery, and available listing searches.</span></div>
+              <div><span className="feature-icon"><Waves size={23} /></span><strong>Flood and hazard tools</strong><span>Official FEMA and North Carolina risk resources.</span></div>
+              <div><span className="feature-icon"><FileSearch size={23} /></span><strong>County public records</strong><span>Available parcel maps, property cards, assessments, and deeds.</span></div>
             </div>
           </section>
         )}
@@ -288,6 +291,11 @@ export function App() {
         <span>1283 N Bridge St, Elkin, NC 28621</span>
         <span>Public records can be incomplete or outdated. This tool is not a title search, survey, flood determination, appraisal, or guarantee of insurance eligibility.</span>
       </footer>
+
+      <nav className="mobile-dock" aria-label="Quick actions">
+        <a href="tel:3368351993"><Phone size={18} />Call</a>
+        <a href="#property-search"><Search size={18} />Find a home</a>
+      </nav>
     </div>
   );
 }
