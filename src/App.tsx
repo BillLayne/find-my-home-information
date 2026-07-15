@@ -198,7 +198,7 @@ export function App() {
         </section>
 
         <section className="scope-band">
-          <div><strong>25 integrated counties</strong><span>Automatic parcel details where supported</span></div>
+          <div><strong>26 integrated counties</strong><span>Automatic parcel details where supported</span></div>
           <div><strong>Statewide hazard tools</strong><span>FEMA and North Carolina resources</span></div>
           <div><strong>Public information only</strong><span>No agency notes or customer files</span></div>
         </section>
@@ -291,4 +291,3 @@ export function App() {
     </div>
   );
 }
-

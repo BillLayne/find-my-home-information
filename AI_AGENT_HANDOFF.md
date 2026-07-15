@@ -66,7 +66,7 @@ npm run cf:deploy
 
 ## Known Coverage Boundary
 
-The upstream NC Insurance Tools engine currently has automatic county integrations for 25 counties. The consumer page must not claim full automated parcel details for all 100 counties until that is true. Statewide FEMA, ReadyNC, and map resources can still be provided when an automatic county record is unavailable.
+The upstream NC Insurance Tools engine currently has automatic county integrations for 26 counties, including Watauga County. The consumer page must not claim full automated parcel details for all 100 counties until that is true. Statewide FEMA, ReadyNC, and map resources can still be provided when an automatic county record is unavailable.
 
 ## Next Design Phase
 

@@ -46,3 +46,31 @@ test("builds an address-specific official FEMA search link", () => {
   );
 });
 
+test("maps Watauga facts and official links without copying private owner fields", () => {
+  const response = buildPublicPropertyResponse({
+    formattedAddress: "104 Mockingbird Ln, Blowing Rock, North Carolina, 28605",
+    county: "Watauga",
+    results: [{
+      county: "Watauga",
+      parcelId: "1940-83-9925-000",
+      owner: "OWNER MUST REMAIN PRIVATE",
+      mailingAddress: "MAILING ADDRESS MUST REMAIN PRIVATE",
+      siteAddress: "104 MOCKINGBIRD LN",
+      heatedArea: 1566,
+      yearBuilt: 1981,
+      totalAcres: 0.78,
+      totalValue: 484600,
+      gisParcelLink: "https://gissvr.watgov.org/maps/?parcelId=1940-83-9925-000&UseSearch=no",
+      taxCardLink: "https://tax.watgov.org/WataugaNC/Datalets/Datalet.aspx?mode=profileall&UseSearch=no&pin=1940-83-9925-000",
+      deedLink: "https://us3.courthousecomputersystems.com/watauganc/",
+    }],
+  }, "104 Mockingbird Ln, Blowing Rock, NC");
+
+  const property = response.results[0];
+  assert.equal(property.county, "Watauga");
+  assert.equal(property.heatedArea, 1566);
+  assert.equal(property.yearBuilt, 1981);
+  assert.equal(property.links.gisParcel?.includes("1940-83-9925-000"), true);
+  assert.equal("owner" in property, false);
+  assert.equal("mailingAddress" in property, false);
+});
