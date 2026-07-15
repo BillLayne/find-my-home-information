@@ -2,6 +2,10 @@
 
 Last updated: 2026-07-15
 
+- Live site: https://find-my-home-information.pages.dev/
+- GitHub repository: https://github.com/BillLayne/find-my-home-information
+- Cloudflare Pages project: `find-my-home-information`
+
 ## Purpose
 
 This is the separate consumer-facing property resource for Bill Layne Insurance Agency. A visitor enters a North Carolina address and receives available public property facts plus organized links to maps, photographs, hazards, county property records, and insurance resources.
@@ -66,7 +70,7 @@ The upstream NC Insurance Tools engine currently has automatic county integratio
 
 ## Next Design Phase
 
-- finalize branded domain and canonical URL
+- finalize the branded custom domain and canonical URL
 - create final hero/property imagery
 - add GA4 and Microsoft Clarity event tracking
 - add managed Cloudflare Turnstile after production widget keys are created
