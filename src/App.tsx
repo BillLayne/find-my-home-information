@@ -278,9 +278,22 @@ export function App() {
               <p className="section-intro">Start with the address above. We will connect you to the public information available for that property and county.</p>
             </div>
             <div className="pre-search-grid">
-              <div><span className="feature-icon"><Camera size={23} /></span><strong>Photos and aerial maps</strong><span>Street View, county GIS imagery, and available listing searches.</span></div>
-              <div><span className="feature-icon"><Waves size={23} /></span><strong>Flood and hazard tools</strong><span>Official FEMA and North Carolina risk resources.</span></div>
-              <div><span className="feature-icon"><FileSearch size={23} /></span><strong>County public records</strong><span>Available parcel maps, property cards, assessments, and deeds.</span></div>
+              <div className="feature-card">
+                <img src="/assets/property-photos-maps.webp" alt="Aerial view of a North Carolina home and parcel boundary" width="1200" height="900" loading="lazy" />
+                <div className="feature-card-body"><span className="feature-icon"><Camera size={23} /></span><strong>Photos and aerial maps</strong><span>Street View, county GIS imagery, and available listing searches.</span></div>
+              </div>
+              <div className="feature-card">
+                <img src="/assets/property-hazard-resources.webp" alt="Tablet displaying property flood and terrain information" width="1200" height="800" loading="lazy" />
+                <div className="feature-card-body"><span className="feature-icon"><Waves size={23} /></span><strong>Flood and hazard tools</strong><span>Official FEMA and North Carolina risk resources.</span></div>
+              </div>
+              <div className="feature-card">
+                <img src="/assets/property-county-records.webp" alt="Organized property assessment, deed, and parcel records" width="1200" height="800" loading="lazy" />
+                <div className="feature-card-body"><span className="feature-icon"><FileSearch size={23} /></span><strong>County public records</strong><span>Available parcel maps, property cards, assessments, and deeds.</span></div>
+              </div>
+              <div className="feature-card">
+                <img src="/assets/property-home-inventory.webp" alt="Homeowner photographing a living room for a home inventory" width="1200" height="800" loading="lazy" />
+                <div className="feature-card-body"><span className="feature-icon"><FileText size={23} /></span><strong>Home inventory resources</strong><span>Prepare belongings records before a loss and organize claim information afterward.</span></div>
+              </div>
             </div>
           </section>
         )}
