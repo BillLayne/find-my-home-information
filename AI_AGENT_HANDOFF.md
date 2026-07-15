@@ -40,6 +40,7 @@ The consumer sanitizer is `shared/property.ts`. It intentionally omits owner and
 ## Architecture
 
 - `src/App.tsx`: address search and consumer result UI
+- `src/LegalPage.tsx`: public Privacy Notice and Terms of Use routes
 - `src/index.css`: current foundation styling
 - `src/lib/api.ts`: browser call to the same-origin proxy
 - `shared/property.ts`: response types, URL validation, safe upstream mapping, FEMA link generation
@@ -48,6 +49,11 @@ The consumer sanitizer is `shared/property.ts`. It intentionally omits owner and
 - `tests/property.test.ts`: privacy and link-generation regression tests
 
 No D1 database is used. Searches are not intentionally persisted.
+
+Public legal routes:
+
+- `/privacy`
+- `/terms`
 
 ## Commands
 

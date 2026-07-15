@@ -7,6 +7,8 @@ Consumer-facing North Carolina property resource from Bill Layne Insurance Agenc
 
 The application accepts an address and organizes available public property details, county records, map/photo destinations, flood resources, and agency tools. It does not expose NC Insurance Tools staff notes, uploads, documents, contact fields, or workflow data.
 
+Public legal routes are available at `/privacy` and `/terms`.
+
 ## Development
 
 ```powershell

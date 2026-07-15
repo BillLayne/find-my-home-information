@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import type { ExternalLinks, PublicProperty, PublicPropertyResponse } from "../shared/property";
 import { findProperty } from "./lib/api";
+import { LegalPage } from "./LegalPage";
 
 type ResourceLink = {
   label: string;
@@ -118,6 +119,10 @@ function propertyResources(property: PublicProperty) {
 }
 
 export function App() {
+  const path = window.location.pathname.replace(/\/+$/, "") || "/";
+  if (path === "/privacy") return <LegalPage kind="privacy" />;
+  if (path === "/terms") return <LegalPage kind="terms" />;
+
   const [address, setAddress] = useState("");
   const [response, setResponse] = useState<PublicPropertyResponse | null>(null);
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -302,6 +307,11 @@ export function App() {
       <footer>
         <strong>Bill Layne Insurance Agency</strong>
         <span>1283 N Bridge St, Elkin, NC 28621</span>
+        <nav className="footer-links" aria-label="Legal information">
+          <a href="/privacy">Privacy Notice</a>
+          <a href="/terms">Terms of Use</a>
+          <a href="https://www.billlayneinsurance.com/">Agency Website</a>
+        </nav>
         <span>Public records can be incomplete or outdated. This tool is not a title search, survey, flood determination, appraisal, or guarantee of insurance eligibility.</span>
       </footer>
 
