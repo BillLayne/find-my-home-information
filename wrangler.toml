@@ -1,0 +1,7 @@
+name = "find-my-home-information"
+compatibility_date = "2026-07-15"
+pages_build_output_dir = "./dist"
+
+[vars]
+PROPERTY_LOOKUP_URL = "https://nc-insurance-tools-gemini.pages.dev/api/lookup"
+
