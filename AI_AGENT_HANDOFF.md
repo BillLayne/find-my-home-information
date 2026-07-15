@@ -2,6 +2,11 @@
 
 Last updated: 2026-07-15
 
+Canonical cross-project handoff:
+
+- `C:\Users\bill\OneDrive\Documents\Playground\nc-insurance-tools\NC_TOOLS_FIND_MY_HOME_HANDOFF.md`
+- Read it first for the single county-engine architecture, current coverage, privacy rules, and the required NC Tools -> consumer deployment order.
+
 - Live site: https://find-my-home-information.pages.dev/
 - GitHub repository: https://github.com/BillLayne/find-my-home-information
 - Cloudflare Pages project: `find-my-home-information`
@@ -66,7 +71,9 @@ npm run cf:deploy
 
 ## Known Coverage Boundary
 
-The upstream NC Insurance Tools engine currently has automatic county integrations for 26 counties, including Watauga County. The consumer page must not claim full automated parcel details for all 100 counties until that is true. Statewide FEMA, ReadyNC, and map resources can still be provided when an automatic county record is unavailable.
+The upstream NC Insurance Tools engine currently has automatic county integrations for 31 counties. The live `/api/counties` route is authoritative. The consumer page must not claim full automated parcel details for all 100 counties until that is true. Statewide FEMA, ReadyNC, and map resources can still be provided when an automatic county record is unavailable.
+
+County adapters are never duplicated here. A county is implemented and deployed in NC Insurance Tools first; this project inherits its results through `/api/lookup`, applies `shared/property.ts`, and then updates any stale presentation count/copy.
 
 ## Next Design Phase
 
