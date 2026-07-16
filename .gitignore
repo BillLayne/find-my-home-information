@@ -4,5 +4,6 @@ dist/
 .env.local
 .wrangler/
 .playwright-cli/
+output/playwright/
 *.log
 .dev-server.pid
