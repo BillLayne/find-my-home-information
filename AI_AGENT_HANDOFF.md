@@ -59,6 +59,8 @@ When NC Tools returns verified parcel geometry, the consumer mapper permits only
 
 The map uses Leaflet and OpenStreetMap tiles. Owner and mailing information remain excluded. When a county returns no parcel, the UI shows a limited-data notice instead of a grid of empty fact boxes.
 
+The street-address comparison intentionally ignores the geocoder's added city, state, and ZIP. Do not restore a full-string comparison or matching county records will be incorrectly labeled as different addresses.
+
 Public legal routes:
 
 - `/privacy`

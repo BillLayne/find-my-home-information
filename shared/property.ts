@@ -125,8 +125,22 @@ function safeUrl(value: unknown) {
   }
 }
 
-function normalizeAddress(value: string) {
-  return value.toUpperCase().replace(/\bNORTH CAROLINA\b/g, "NC").replace(/[^A-Z0-9]/g, "");
+function normalizeStreetAddress(value: string) {
+  return value
+    .split(",")[0]
+    .toUpperCase()
+    .replace(/\bROAD\b/g, "RD")
+    .replace(/\bSTREET\b/g, "ST")
+    .replace(/\bAVENUE\b/g, "AVE")
+    .replace(/\bBOULEVARD\b/g, "BLVD")
+    .replace(/\bDRIVE\b/g, "DR")
+    .replace(/\bLANE\b/g, "LN")
+    .replace(/\bHIGHWAY\b/g, "HWY")
+    .replace(/\bCOURT\b/g, "CT")
+    .replace(/\bCIRCLE\b/g, "CIR")
+    .replace(/\bTRAIL\b/g, "TRL")
+    .replace(/\bPARKWAY\b/g, "PKWY")
+    .replace(/[^A-Z0-9]/g, "");
 }
 
 export function buildFemaLink(address: string) {
@@ -152,7 +166,7 @@ export function buildPublicPropertyResponse(raw: unknown, inputAddress: string, 
       pin,
       officialAddress,
       searchedAddress: formattedAddress,
-      recordAddressDiffers: normalizeAddress(officialAddress) !== normalizeAddress(formattedAddress),
+      recordAddressDiffers: normalizeStreetAddress(officialAddress) !== normalizeStreetAddress(formattedAddress),
       totalAcres: number(item.totalAcres),
       landValue: number(item.landValue),
       buildingValue: number(item.buildingValue),

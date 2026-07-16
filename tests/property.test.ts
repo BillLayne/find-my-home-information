@@ -53,6 +53,20 @@ test("builds an address-specific official FEMA search link", () => {
   );
 });
 
+test("does not flag a matching street address when the geocoder adds city, state, and ZIP", () => {
+  const response = buildPublicPropertyResponse({
+    formattedAddress: "800 Creekwood Rd, Sanford, North Carolina, 27330",
+    county: "Lee",
+    results: [{
+      county: "Lee",
+      parcelId: "9612-95-5442-00",
+      siteAddress: "800 CREEKWOOD ROAD",
+    }],
+  }, "800 Creekwood Rd, Sanford, NC 27330");
+
+  assert.equal(response.results[0].recordAddressDiffers, false);
+});
+
 test("maps Watauga facts and official links without copying private owner fields", () => {
   const response = buildPublicPropertyResponse({
     formattedAddress: "104 Mockingbird Ln, Blowing Rock, North Carolina, 28605",
