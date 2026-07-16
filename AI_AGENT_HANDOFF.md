@@ -1,6 +1,6 @@
 # Find My Home Information - AI Handoff
 
-Last updated: 2026-07-15
+Last updated: 2026-07-16
 
 Canonical cross-project handoff:
 
@@ -41,6 +41,7 @@ The consumer sanitizer is `shared/property.ts`. It intentionally omits owner and
 
 - `src/App.tsx`: address search and consumer result UI
 - `src/LegalPage.tsx`: public Privacy Notice and Terms of Use routes
+- `src/ParcelMap.tsx`: consumer-safe highlighted parcel map
 - `src/index.css`: current foundation styling
 - `src/lib/api.ts`: browser call to the same-origin proxy
 - `shared/property.ts`: response types, URL validation, safe upstream mapping, FEMA link generation
@@ -49,6 +50,14 @@ The consumer sanitizer is `shared/property.ts`. It intentionally omits owner and
 - `tests/property.test.ts`: privacy and link-generation regression tests
 
 No D1 database is used. Searches are not intentionally persisted.
+
+When NC Tools returns verified parcel geometry, the consumer mapper permits only:
+
+- parcel boundary coordinate rings
+- searched-address latitude and longitude
+- parcel match method
+
+The map uses Leaflet and OpenStreetMap tiles. Owner and mailing information remain excluded. When a county returns no parcel, the UI shows a limited-data notice instead of a grid of empty fact boxes.
 
 Public legal routes:
 

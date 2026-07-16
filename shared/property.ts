@@ -40,6 +40,11 @@ export type PublicProperty = {
   saleDate?: string;
   deedBook?: string;
   deedPage?: string;
+  latitude?: number;
+  longitude?: number;
+  parcelRings?: Array<Array<[number, number]>>;
+  matchMethod: "parcel-point" | "address" | "geocode-only";
+  hasCountyRecord: boolean;
   links: ExternalLinks;
 };
 
@@ -78,6 +83,37 @@ function integer(value: unknown) {
   return parsed == null ? undefined : Math.trunc(parsed);
 }
 
+function coordinate(value: unknown, minimum: number, maximum: number) {
+  const parsed = number(value);
+  return parsed != null && parsed >= minimum && parsed <= maximum ? parsed : undefined;
+}
+
+function parcelRings(value: unknown) {
+  if (!Array.isArray(value)) return undefined;
+  const rings = value
+    .slice(0, 20)
+    .map((ring) => Array.isArray(ring)
+      ? ring
+        .slice(0, 10000)
+        .filter((point) => Array.isArray(point) && point.length >= 2)
+        .map((point) => [
+          coordinate(point[0], -180, 180),
+          coordinate(point[1], -90, 90),
+        ] as const)
+        .filter((point): point is [number, number] => point[0] != null && point[1] != null)
+      : [])
+    .filter((ring) => ring.length >= 3);
+  return rings.length ? rings : undefined;
+}
+
+function matchMethod(value: unknown, hasCountyRecord: boolean): PublicProperty["matchMethod"] {
+  return value === "parcel-point" || value === "address" || value === "geocode-only"
+    ? value
+    : hasCountyRecord
+      ? "address"
+      : "geocode-only";
+}
+
 function safeUrl(value: unknown) {
   const normalized = text(value);
   if (!normalized) return undefined;
@@ -107,6 +143,7 @@ export function buildPublicPropertyResponse(raw: unknown, inputAddress: string, 
     const officialAddress = text(item.siteAddress) || formattedAddress;
     const parcelId = text(item.parcelId);
     const pin = text(item.pin);
+    const hasCountyRecord = Boolean(parcelId || pin);
 
     return {
       id: `${county}-${parcelId || pin || index}`,
@@ -137,6 +174,11 @@ export function buildPublicPropertyResponse(raw: unknown, inputAddress: string, 
       saleDate: text(item.saleDate),
       deedBook: text(item.deedBook),
       deedPage: text(item.deedPage),
+      latitude: coordinate(item.latitude, -90, 90),
+      longitude: coordinate(item.longitude, -180, 180),
+      parcelRings: parcelRings(item.parcelRings),
+      matchMethod: matchMethod(item.matchMethod, hasCountyRecord),
+      hasCountyRecord,
       links: {
         googleMaps: safeUrl(item.googleMapsLink),
         gis: safeUrl(item.gisLink),
@@ -161,4 +203,3 @@ export function buildPublicPropertyResponse(raw: unknown, inputAddress: string, 
     generatedAt: now.toISOString(),
   };
 }
-

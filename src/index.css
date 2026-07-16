@@ -115,12 +115,30 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
 .summary-heading h2 { margin: 0; color: var(--navy); font-size: 38px; font-weight: 900; line-height: 1.08; letter-spacing: 0; overflow-wrap: anywhere; }
 .badges { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 13px; }
 .badges span { padding: 6px 9px; border-radius: 5px; color: #31556b; background: #edf5f8; font-size: 11px; font-weight: 800; }
+.badges .verified-badge { color: #12614f; background: #e5f5ef; }
+.badges .limited-badge { color: #815a12; background: #fff3d8; }
 .primary-cta { min-height: 46px; display: inline-flex; align-items: center; justify-content: center; gap: 9px; padding: 0 17px; border-radius: 7px; color: white; background: var(--green); text-decoration: none; font-size: 12px; font-weight: 850; white-space: nowrap; box-shadow: 0 8px 20px rgba(37, 132, 94, .18); }
 .primary-cta:hover { background: #1e704f; }
 .fact-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; margin-top: 28px; overflow: hidden; border: 1px solid var(--line); border-radius: 7px; background: var(--line); }
+.fact-grid--1 { grid-template-columns: 1fr; }
+.fact-grid--2 { grid-template-columns: repeat(2, 1fr); }
+.fact-grid--3 { grid-template-columns: repeat(3, 1fr); }
 .fact-grid div { min-width: 0; min-height: 92px; display: grid; align-content: center; gap: 7px; padding: 16px; background: #fbfdfe; }
 .fact-grid span { color: var(--muted); font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; }
 .fact-grid strong { color: var(--ink); font-size: 15px; font-weight: 800; overflow-wrap: anywhere; }
+.fact-source-note { margin: 12px 0 0; color: var(--muted); font-size: 10px; line-height: 1.55; }
+.limited-record-notice { margin-top: 25px; color: #77520f; background: #fff8e8; border: 1px solid #ebd8a9; }
+
+.parcel-map-section { margin-top: 28px; overflow: hidden; border: 1px solid #cddde5; border-radius: 8px; background: white; box-shadow: 0 14px 36px rgba(8, 40, 69, .06); }
+.parcel-map-heading { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 22px 24px; border-bottom: 1px solid var(--line); }
+.parcel-map-heading h3 { margin: 0; color: var(--navy); font-size: 23px; line-height: 1.16; letter-spacing: 0; }
+.parcel-map-heading div > span { display: flex; align-items: center; gap: 7px; margin-top: 8px; color: var(--muted); font-size: 11px; font-weight: 700; }
+.parcel-map-heading div > span svg { color: var(--teal); }
+.parcel-map-heading > a { min-height: 42px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 0 14px; flex: 0 0 auto; color: var(--blue); border: 1px solid #b9d2de; border-radius: 7px; background: #f7fbfd; text-decoration: none; font-size: 11px; font-weight: 850; }
+.parcel-map-heading > a:hover { color: var(--navy); border-color: #8cb4c7; }
+.parcel-map { width: 100%; height: 380px; background: #dce9ee; }
+.parcel-map-note { margin: 0; padding: 11px 20px 13px; color: var(--muted); border-top: 1px solid var(--line); font-size: 9px; line-height: 1.45; }
+.parcel-map .leaflet-control-attribution { font-size: 9px; }
 
 .resource-section { margin-top: 58px; }
 .resource-section .section-heading { max-width: 720px; }
@@ -182,6 +200,8 @@ footer span { max-width: 840px; color: var(--muted); font-size: 10px; line-heigh
   .summary-heading { display: grid; }
   .primary-cta { width: fit-content; }
   .fact-grid { grid-template-columns: repeat(2, 1fr); }
+  .fact-grid--1 { grid-template-columns: 1fr; }
+  .fact-grid--3 { grid-template-columns: repeat(2, 1fr); }
 }
 
 @media (max-width: 760px) {
@@ -228,8 +248,14 @@ footer span { max-width: 840px; color: var(--muted); font-size: 10px; line-heigh
   .summary-heading h2 { font-size: 29px; }
   .primary-cta { width: 100%; }
   .fact-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 22px; }
+  .fact-grid--1 { grid-template-columns: 1fr; }
   .fact-grid div { min-height: 88px; padding: 13px; }
   .fact-grid strong { font-size: 14px; }
+
+  .parcel-map-heading { display: grid; gap: 16px; padding: 19px 17px; }
+  .parcel-map-heading h3 { font-size: 21px; }
+  .parcel-map-heading > a { width: 100%; }
+  .parcel-map { height: 330px; }
 
   .resource-section { margin-top: 48px; }
   .resource-grid { gap: 10px; margin-top: 18px; }

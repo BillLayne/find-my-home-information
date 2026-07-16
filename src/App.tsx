@@ -25,6 +25,7 @@ import {
 import type { ExternalLinks, PublicProperty, PublicPropertyResponse } from "../shared/property";
 import { findProperty } from "./lib/api";
 import { LegalPage } from "./LegalPage";
+import { ParcelMap } from "./ParcelMap";
 
 type ResourceLink = {
   label: string;
@@ -111,7 +112,15 @@ function propertyResources(property: PublicProperty) {
       { label: "ReadyNC Hazard Resources", description: "Review North Carolina emergency and hazard preparedness resources.", href: links.readyNc, icon: Flame, source: "Official" as const },
     ],
     records: [
-      { label: "County GIS Parcel", description: "Open the county's official public parcel mapping system.", href: links.gisParcel || links.gis, icon: LandPlot, source: "Official" as const },
+      {
+        label: property.hasCountyRecord ? "County GIS Parcel" : "County GIS Search",
+        description: property.hasCountyRecord
+          ? "Open the matched parcel in an official public mapping destination."
+          : "Open the county's public mapping system and search the address.",
+        href: links.gisParcel || links.gis,
+        icon: LandPlot,
+        source: "Official" as const,
+      },
       { label: "County Property Card", description: "View the available county assessment or property record card.", href: links.taxCard, icon: FileSearch, source: "Official" as const },
       { label: "Deed or Register of Deeds", description: "Open the available county deed-search destination.", href: links.deed, icon: Building2, source: "Official" as const },
     ],
@@ -132,6 +141,21 @@ export function App() {
 
   const activeProperty = response?.results[selectedIndex] || null;
   const resources = useMemo(() => activeProperty ? propertyResources(activeProperty) : null, [activeProperty]);
+  const factItems = activeProperty ? [
+    { label: "Heated area", value: activeProperty.heatedArea ? `${formatNumber(activeProperty.heatedArea)} sq ft` : undefined },
+    { label: "Year built", value: activeProperty.yearBuilt ? String(activeProperty.yearBuilt) : undefined },
+    { label: "Acreage", value: activeProperty.totalAcres == null ? undefined : formatNumber(activeProperty.totalAcres) },
+    { label: "Assessed value", value: activeProperty.totalValue == null ? undefined : formatCurrency(activeProperty.totalValue) },
+    { label: "Bedrooms", value: activeProperty.bedrooms == null ? undefined : String(activeProperty.bedrooms) },
+    {
+      label: "Bathrooms",
+      value: activeProperty.fullBaths == null
+        ? undefined
+        : `${activeProperty.fullBaths} full${activeProperty.halfBaths ? `, ${activeProperty.halfBaths} half` : ""}`,
+    },
+    { label: "Exterior", value: activeProperty.exteriorWall },
+    { label: "Roof", value: activeProperty.roofCover || activeProperty.roofStructure },
+  ].filter((item): item is { label: string; value: string } => Boolean(item.value)) : [];
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -235,6 +259,13 @@ export function App() {
                   <div className="badges">
                     <span>{activeProperty.county} County</span>
                     {activeProperty.parcelId || activeProperty.pin ? <span>Parcel {activeProperty.parcelId || activeProperty.pin}</span> : null}
+                    <span className={activeProperty.hasCountyRecord ? "verified-badge" : "limited-badge"}>
+                      {activeProperty.matchMethod === "parcel-point"
+                        ? "Parcel verified by location"
+                        : activeProperty.hasCountyRecord
+                          ? "County record matched"
+                          : "Address located"}
+                    </span>
                   </div>
                 </div>
                 <a className="primary-cta" href={quoteHref}>Request an insurance review <ArrowRight size={17} /></a>
@@ -247,18 +278,37 @@ export function App() {
                 </div>
               ) : null}
 
-              <div className="fact-grid">
-                <div><span>Heated area</span><strong>{activeProperty.heatedArea ? `${formatNumber(activeProperty.heatedArea)} sq ft` : "Not available"}</strong></div>
-                <div><span>Year built</span><strong>{activeProperty.yearBuilt || "Not available"}</strong></div>
-                <div><span>Acreage</span><strong>{activeProperty.totalAcres == null ? "Not available" : formatNumber(activeProperty.totalAcres)}</strong></div>
-                <div><span>Assessed value</span><strong>{formatCurrency(activeProperty.totalValue)}</strong></div>
-                <div><span>Bedrooms</span><strong>{activeProperty.bedrooms ?? "Not available"}</strong></div>
-                <div><span>Bathrooms</span><strong>{activeProperty.fullBaths == null ? "Not available" : `${activeProperty.fullBaths} full${activeProperty.halfBaths ? `, ${activeProperty.halfBaths} half` : ""}`}</strong></div>
-                <div><span>Exterior</span><strong>{activeProperty.exteriorWall || "Not available"}</strong></div>
-                <div><span>Roof</span><strong>{activeProperty.roofCover || activeProperty.roofStructure || "Not available"}</strong></div>
-              </div>
+              {!activeProperty.hasCountyRecord ? (
+                <div className="notice limited-record-notice">
+                  <AlertTriangle size={20} />
+                  <div>
+                    <strong>The address was located, but an automatic parcel record was not returned.</strong>
+                    <span>{response?.note || "Use the verified county and statewide resources below while we monitor this county connection."}</span>
+                  </div>
+                </div>
+              ) : factItems.length ? (
+                <>
+                  <div className={`fact-grid fact-grid--${Math.min(factItems.length, 4)}`}>
+                    {factItems.map((item) => (
+                      <div key={item.label}><span>{item.label}</span><strong>{item.value}</strong></div>
+                    ))}
+                  </div>
+                  {factItems.length < 8 ? (
+                    <p className="fact-source-note">Only facts published by the connected county source are shown. Additional building details may require the official property card.</p>
+                  ) : null}
+                </>
+              ) : (
+                <div className="notice limited-record-notice">
+                  <FileSearch size={20} />
+                  <div>
+                    <strong>The parcel was matched, but this county publishes limited building details.</strong>
+                    <span>Use the official property-card link below for the most complete available record.</span>
+                  </div>
+                </div>
+              )}
             </section>
 
+            <ParcelMap property={activeProperty} />
             <ResourceGroup title="See the home and surrounding property" eyebrow="Photos and maps" links={resources.photos} tone="photos" />
             <ResourceGroup title="Review location-based hazard information" eyebrow="Hazard resources" links={resources.hazards} tone="hazards" />
             <ResourceGroup title="Open available county records" eyebrow="Official records" links={resources.records} tone="records" />
