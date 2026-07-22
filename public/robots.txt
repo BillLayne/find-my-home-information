@@ -2,3 +2,5 @@ User-agent: *
 Allow: /
 Disallow: /api/
 
+Sitemap: https://find-my-home-information.pages.dev/sitemap.xml
+

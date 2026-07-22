@@ -129,6 +129,18 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
 .fact-source-note { margin: 12px 0 0; color: var(--muted); font-size: 10px; line-height: 1.55; }
 .limited-record-notice { margin-top: 25px; color: #77520f; background: #fff8e8; border: 1px solid #ebd8a9; }
 
+.rebuild-explainer { margin-top: 28px; padding: 30px 32px; border: 1px solid var(--line); border-radius: 8px; background: white; box-shadow: 0 14px 36px rgba(8, 40, 69, .06); }
+.rebuild-explainer .section-intro { max-width: 760px; margin-top: 14px; }
+.rebuild-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 24px; }
+.rebuild-grid > div { min-width: 0; display: grid; align-content: start; gap: 8px; padding: 18px; border: 1px solid var(--line); border-radius: 7px; background: #fbfdfe; }
+.rebuild-grid strong { color: var(--navy); font-size: 14px; font-weight: 850; }
+.rebuild-grid p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.6; }
+.rebuild-tag { justify-self: start; padding: 5px 9px; border-radius: 5px; font-size: 10px; font-weight: 850; text-transform: uppercase; letter-spacing: .07em; }
+.rebuild-tag--tax { color: #31556b; background: #edf5f8; }
+.rebuild-tag--rebuild { color: #12614f; background: #e5f5ef; }
+.rebuild-tag--why { color: #815a12; background: #fff3d8; }
+.rebuild-note { margin: 20px 0 0; padding: 14px 16px; color: #31556b; background: #f4f9fb; border: 1px solid #d9e8ef; border-radius: 7px; font-size: 12.5px; line-height: 1.6; }
+
 .parcel-map-section { margin-top: 28px; overflow: hidden; border: 1px solid #cddde5; border-radius: 8px; background: white; box-shadow: 0 14px 36px rgba(8, 40, 69, .06); }
 .parcel-map-heading { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 22px 24px; border-bottom: 1px solid var(--line); }
 .parcel-map-heading h3 { margin: 0; color: var(--navy); font-size: 23px; line-height: 1.16; letter-spacing: 0; }
@@ -206,6 +218,8 @@ footer span { max-width: 840px; color: var(--muted); font-size: 10px; line-heigh
 
 @media (max-width: 760px) {
   body { padding-bottom: 72px; }
+  .rebuild-explainer { padding: 24px 20px; }
+  .rebuild-grid { grid-template-columns: 1fr; }
   .site-header { min-height: 66px; padding: 10px 16px; }
   .brand { gap: 9px; }
   .brand-mark { width: 38px; height: 38px; flex-basis: 38px; }

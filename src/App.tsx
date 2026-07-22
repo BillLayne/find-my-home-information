@@ -308,6 +308,41 @@ export function App() {
               )}
             </section>
 
+            {activeProperty.totalValue != null ? (
+              <section className="rebuild-explainer">
+                <div className="section-heading">
+                  <p>What this means for insurance</p>
+                  <h3>Tax value is not the same as rebuild cost</h3>
+                </div>
+                <p className="section-intro">
+                  The assessed value above is what the county uses to work out property taxes. Home insurance is
+                  based on something different: what it would cost to rebuild this home today.
+                </p>
+                <div className="rebuild-grid">
+                  <div>
+                    <span className="rebuild-tag rebuild-tag--tax">Tax value</span>
+                    <strong>What the county taxes</strong>
+                    <p>Set by the county to bill property taxes. It includes the land, and it often comes from a revaluation done a few years ago.</p>
+                  </div>
+                  <div>
+                    <span className="rebuild-tag rebuild-tag--rebuild">Rebuild cost</span>
+                    <strong>What it costs to build again</strong>
+                    <p>Today&rsquo;s price of the materials and labor to rebuild the same home after a total loss. The land is not included, because you would still own it.</p>
+                  </div>
+                  <div>
+                    <span className="rebuild-tag rebuild-tag--why">Why they differ</span>
+                    <strong>Two different jobs</strong>
+                    <p>Building costs move with the market, and older homes can cost more to rebuild than their tax value suggests. The two numbers are commonly far apart.</p>
+                  </div>
+                </div>
+                <p className="rebuild-note">
+                  This is why a homeowners policy amount is often higher than a tax value. Insuring a home for its
+                  tax value can leave a gap after a serious loss, so it is worth confirming the rebuild figure
+                  rather than assuming the two match.
+                </p>
+              </section>
+            ) : null}
+
             <ParcelMap property={activeProperty} />
             <ResourceGroup title="See the home and surrounding property" eyebrow="Photos and maps" links={resources.photos} tone="photos" />
             <ResourceGroup title="Review location-based hazard information" eyebrow="Hazard resources" links={resources.hazards} tone="hazards" />
