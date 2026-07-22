@@ -227,7 +227,7 @@ export function App() {
         </section>
 
         <section className="scope-band">
-          <div><span className="scope-icon"><Map size={19} /></span><span className="scope-copy"><strong>33 integrated counties</strong><span>Automatic parcel details where supported</span></span></div>
+          <div><span className="scope-icon"><Map size={19} /></span><span className="scope-copy"><strong>34 integrated counties</strong><span>Automatic parcel details where supported</span></span></div>
           <div><span className="scope-icon"><ShieldCheck size={19} /></span><span className="scope-copy"><strong>Statewide hazard tools</strong><span>FEMA and North Carolina resources</span></span></div>
           <div><span className="scope-icon"><CheckCircle2 size={19} /></span><span className="scope-copy"><strong>Public information only</strong><span>No agency notes or customer files</span></span></div>
         </section>
