@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import {
   AlertTriangle,
   ArrowRight,
@@ -157,10 +157,7 @@ export function App() {
     { label: "Roof", value: activeProperty.roofCover || activeProperty.roofStructure },
   ].filter((item): item is { label: string; value: string } => Boolean(item.value)) : [];
 
-  async function handleSubmit(event: FormEvent) {
-    event.preventDefault();
-    const cleanAddress = address.replace(/\s+/g, " ").trim();
-    if (!cleanAddress) return;
+  async function runSearch(cleanAddress: string) {
     setLoading(true);
     setError("");
     try {
@@ -176,6 +173,25 @@ export function App() {
       setLoading(false);
     }
   }
+
+  async function handleSubmit(event: FormEvent) {
+    event.preventDefault();
+    const cleanAddress = address.replace(/\s+/g, " ").trim();
+    if (!cleanAddress) return;
+    await runSearch(cleanAddress);
+  }
+
+  // Deep link: /?address=123 Main St, Elkin NC prefills the box and runs the
+  // lookup immediately — lets other tools (e.g. the task manager) jump straight
+  // to a property with one tap. Runs once on mount.
+  useEffect(() => {
+    const fromUrl = new URLSearchParams(window.location.search).get("address");
+    const clean = (fromUrl || "").replace(/\s+/g, " ").trim();
+    if (!clean) return;
+    setAddress(clean);
+    void runSearch(clean);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const quoteHref = activeProperty
     ? `mailto:save@billlayneinsurance.com?subject=${encodeURIComponent(`Home insurance review - ${activeProperty.searchedAddress}`)}&body=${encodeURIComponent(`Hello Bill Layne Insurance,\n\nI used the Find My Home Information tool and would like help reviewing insurance for:\n\n${activeProperty.searchedAddress}\n${activeProperty.county} County\nParcel: ${activeProperty.parcelId || activeProperty.pin || "Not available"}\n\nPlease contact me to continue.`)}`
