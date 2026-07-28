@@ -11,7 +11,6 @@ import {
   Flame,
   FolderSearch,
   Home,
-  HousePlug,
   LandPlot,
   LoaderCircle,
   Mail,
@@ -103,8 +102,7 @@ function propertyResources(property: PublicProperty) {
     photos: [
       { label: "Google Maps & Street View", description: "See the address, nearby roads, and available street-level imagery.", href: links.googleMaps, icon: MapPin, source: "Third party" as const },
       { label: "County GIS Aerial", description: "Open county parcel boundaries and available aerial photography.", href: links.gisParcel || links.gis, icon: Map, source: "Official" as const },
-      { label: "Zillow Property Search", description: "Search for available listing photographs and market information.", href: links.zillow, icon: Camera, source: "Third party" as const },
-      { label: "Realtor.com Property Search", description: "Search for listing history and available property photographs.", href: links.realtor, icon: HousePlug, source: "Third party" as const },
+      { label: "Zillow Property Page", description: "See this home's photos, estimated value, and history — even if it is not for sale.", href: links.zillow, icon: Camera, source: "Third party" as const },
     ],
     hazards: [
       { label: "FEMA Flood Map", description: "Search the official FEMA Map Service Center using this address.", href: links.fema, icon: Waves, source: "Official" as const },
