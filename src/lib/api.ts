@@ -23,3 +23,15 @@ export async function findProperty(address: string) {
   // normalized by the Cloudflare Function.
   return buildPublicPropertyResponse(payload, address);
 }
+
+export async function findCountyCoverage() {
+  const response = await fetch("/api/counties", {
+    headers: { Accept: "application/json" },
+    cache: "no-store",
+  });
+  const payload = await response.json().catch(() => null) as { count?: unknown } | null;
+  if (!response.ok || typeof payload?.count !== "number" || !Number.isInteger(payload.count) || payload.count < 1) {
+    throw new Error("County coverage is unavailable.");
+  }
+  return payload.count;
+}

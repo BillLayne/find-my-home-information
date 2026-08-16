@@ -5,6 +5,8 @@ import {
   Building2,
   Camera,
   CheckCircle2,
+  ChevronDown,
+  ChevronUp,
   ExternalLink,
   FileSearch,
   FileText,
@@ -17,12 +19,15 @@ import {
   Map,
   MapPin,
   Phone,
+  Printer,
+  RotateCcw,
   Search,
+  Share2,
   ShieldCheck,
   Waves,
 } from "lucide-react";
 import type { ExternalLinks, PublicProperty, PublicPropertyResponse } from "../shared/property";
-import { findProperty } from "./lib/api";
+import { findCountyCoverage, findProperty } from "./lib/api";
 import { LegalPage } from "./LegalPage";
 import { ParcelMap } from "./ParcelMap";
 
@@ -68,10 +73,10 @@ function formatCurrency(value?: number) {
     : new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(value);
 }
 
-function ResourceGroup({ title, eyebrow, links, tone }: { title: string; eyebrow: string; links: ResourceLink[]; tone: "photos" | "hazards" | "records" | "insurance" }) {
+function ResourceGroup({ id, title, eyebrow, links, tone }: { id: string; title: string; eyebrow: string; links: ResourceLink[]; tone: "photos" | "hazards" | "records" | "insurance" }) {
   const availableLinks = links.filter((link) => Boolean(link.href));
   return (
-    <section className={`resource-section resource-section--${tone}`}>
+    <section id={id} className={`resource-section resource-section--${tone}`}>
       <div className="section-heading">
         <p>{eyebrow}</p>
         <h3>{title}</h3>
@@ -135,10 +140,44 @@ export function App() {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [coverageCount, setCoverageCount] = useState(41);
+  const [isRebuildExpanded, setIsRebuildExpanded] = useState(false);
+  const [reportStatus, setReportStatus] = useState("");
   const resultsRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   const activeProperty = response?.results[selectedIndex] || null;
   const resources = useMemo(() => activeProperty ? propertyResources(activeProperty) : null, [activeProperty]);
+  const homeLinks = useMemo(() => {
+    if (!activeProperty) return [];
+    const links = activeProperty.links;
+    return [
+      {
+        label: activeProperty.hasCountyRecord ? "Official parcel map" : "County GIS search",
+        description: activeProperty.hasCountyRecord ? "Open the matched parcel in the county mapping system." : "Search this address in the county mapping system.",
+        href: links.gisParcel || links.gis,
+        icon: LandPlot,
+      },
+      {
+        label: "County property card",
+        description: "Open the available assessment and building record.",
+        href: links.taxCard,
+        icon: FileSearch,
+      },
+      {
+        label: "Maps & Street View",
+        description: "See the address, surrounding roads, and street-level imagery.",
+        href: links.googleMaps,
+        icon: MapPin,
+      },
+      {
+        label: "FEMA flood map",
+        description: "Review the official FEMA map search for this address.",
+        href: links.fema,
+        icon: Waves,
+      },
+    ].filter((link): link is { label: string; description: string; href: string; icon: typeof MapPin } => Boolean(link.href));
+  }, [activeProperty]);
   const factItems = activeProperty ? [
     { label: "Heated area", value: activeProperty.heatedArea ? `${formatNumber(activeProperty.heatedArea)} sq ft` : undefined },
     { label: "Year built", value: activeProperty.yearBuilt ? String(activeProperty.yearBuilt) : undefined },
@@ -191,6 +230,59 @@ export function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    let cancelled = false;
+    findCountyCoverage()
+      .then((count) => {
+        if (!cancelled && count > 0) setCoverageCount(count);
+      })
+      .catch(() => {
+        // The verified fallback keeps the page useful if the coverage endpoint is temporarily unavailable.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    setIsRebuildExpanded(false);
+    setReportStatus("");
+  }, [activeProperty?.id]);
+
+  function focusSearch() {
+    document.getElementById("property-search")?.scrollIntoView({ behavior: "smooth", block: "center" });
+    window.setTimeout(() => searchInputRef.current?.focus(), 450);
+  }
+
+  function handlePrintReport() {
+    window.print();
+  }
+
+  async function handleShareReport() {
+    if (!activeProperty) return;
+    const shareUrl = new URL(window.location.href);
+    shareUrl.search = "";
+    shareUrl.searchParams.set("address", activeProperty.searchedAddress);
+    const shareData = {
+      title: `Home information for ${activeProperty.officialAddress}`,
+      text: `Public property information and official links for ${activeProperty.officialAddress}.`,
+      url: shareUrl.toString(),
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+        setReportStatus("Property report shared.");
+      } else {
+        await navigator.clipboard.writeText(shareData.url);
+        setReportStatus("Property report link copied.");
+      }
+    } catch (shareError) {
+      if (shareError instanceof Error && shareError.name === "AbortError") return;
+      setReportStatus("The link could not be shared. You can copy the address from the search box.");
+    }
+  }
+
   const quoteHref = activeProperty
     ? `mailto:save@billlayneinsurance.com?subject=${encodeURIComponent(`Home insurance review - ${activeProperty.searchedAddress}`)}&body=${encodeURIComponent(`Hello Bill Layne Insurance,\n\nI used the Find My Home Information tool and would like help reviewing insurance for:\n\n${activeProperty.searchedAddress}\n${activeProperty.county} County\nParcel: ${activeProperty.parcelId || activeProperty.pin || "Not available"}\n\nPlease contact me to continue.`)}`
     : "mailto:save@billlayneinsurance.com?subject=Home%20insurance%20review";
@@ -221,6 +313,7 @@ export function App() {
                 <Search size={20} aria-hidden="true" />
                 <span className="sr-only">North Carolina property address</span>
                 <input
+                  ref={searchInputRef}
                   value={address}
                   onChange={(event) => setAddress(event.target.value)}
                   placeholder="Example: 123 Main St, Elkin, NC"
@@ -241,7 +334,7 @@ export function App() {
         </section>
 
         <section className="scope-band">
-          <div><span className="scope-icon"><Map size={19} /></span><span className="scope-copy"><strong>41 integrated counties</strong><span>Automatic parcel details where supported</span></span></div>
+          <div><span className="scope-icon"><Map size={19} /></span><span className="scope-copy"><strong>{coverageCount} integrated counties</strong><span>Automatic parcel details where supported</span></span></div>
           <div><span className="scope-icon"><ShieldCheck size={19} /></span><span className="scope-copy"><strong>Statewide hazard tools</strong><span>FEMA and North Carolina resources</span></span></div>
           <div><span className="scope-icon"><CheckCircle2 size={19} /></span><span className="scope-copy"><strong>Public information only</strong><span>No agency notes or customer files</span></span></div>
         </section>
@@ -255,6 +348,18 @@ export function App() {
 
         {activeProperty && resources ? (
           <div className="results" ref={resultsRef}>
+            <nav className="result-nav" aria-label="Property report sections">
+              <div className="result-nav-links">
+                <a href="#property-overview">Overview</a>
+                <a href="#home-links">Home links</a>
+                {activeProperty.parcelRings?.length ? <a href="#parcel-map">Parcel map</a> : null}
+                <a href="#photos-maps">Photos</a>
+                <a href="#hazards">Hazards</a>
+                <a href="#records">Records</a>
+              </div>
+              <button type="button" onClick={focusSearch}><RotateCcw size={14} />New address</button>
+            </nav>
+
             {response && response.results.length > 1 ? (
               <div className="result-picker" aria-label="Choose a property match">
                 {response.results.map((property, index) => (
@@ -265,7 +370,7 @@ export function App() {
               </div>
             ) : null}
 
-            <section className="property-summary">
+            <section id="property-overview" className="property-summary">
               <div className="summary-heading">
                 <div>
                   <p className="eyebrow">Available public information</p>
@@ -282,7 +387,15 @@ export function App() {
                     </span>
                   </div>
                 </div>
-                <a className="primary-cta" href={quoteHref}>Request an insurance review <ArrowRight size={17} /></a>
+                <div className="summary-actions">
+                  <a className="primary-cta" href={quoteHref}>Request an insurance review <ArrowRight size={17} /></a>
+                  <a className="secondary-cta" href="tel:3368351993"><Phone size={16} />Call the agency</a>
+                  <div className="report-actions" aria-label="Property report actions">
+                    <button type="button" onClick={handlePrintReport}><Printer size={15} />Print / Save PDF</button>
+                    <button type="button" onClick={() => void handleShareReport()}><Share2 size={15} />Share report</button>
+                  </div>
+                  <span className="report-status" role="status" aria-live="polite">{reportStatus}</span>
+                </div>
               </div>
 
               {activeProperty.recordAddressDiffers ? (
@@ -322,46 +435,78 @@ export function App() {
               )}
             </section>
 
+            {homeLinks.length ? (
+              <section id="home-links" className="home-links-section">
+                <div className="home-links-heading">
+                  <div className="section-heading">
+                    <p>Your home links</p>
+                    <h3>Open the most useful property resources</h3>
+                  </div>
+                  <span>Official destinations open in a new tab</span>
+                </div>
+                <div className="home-links-grid">
+                  {homeLinks.map((link) => {
+                    const Icon = link.icon;
+                    return (
+                      <a key={link.label} href={link.href} target="_blank" rel="noopener noreferrer">
+                        <span className="home-link-icon"><Icon size={20} /></span>
+                        <span><strong>{link.label}</strong><small>{link.description}</small></span>
+                        <ExternalLink size={15} aria-hidden="true" />
+                      </a>
+                    );
+                  })}
+                </div>
+              </section>
+            ) : null}
+
             {activeProperty.totalValue != null ? (
               <section className="rebuild-explainer">
-                <div className="section-heading">
-                  <p>What this means for insurance</p>
-                  <h3>Tax value is not the same as rebuild cost</h3>
+                <div className="rebuild-summary">
+                  <div className="section-heading">
+                    <p>What this means for insurance</p>
+                    <h3>Tax value is not the same as rebuild cost</h3>
+                  </div>
+                  <button type="button" onClick={() => setIsRebuildExpanded((current) => !current)} aria-expanded={isRebuildExpanded} aria-controls="rebuild-details">
+                    {isRebuildExpanded ? "Show less" : "Learn why"}
+                    {isRebuildExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                  </button>
                 </div>
                 <p className="section-intro">
                   The assessed value above is what the county uses to work out property taxes. Home insurance is
                   based on something different: what it would cost to rebuild this home today.
                 </p>
-                <div className="rebuild-grid">
-                  <div>
-                    <span className="rebuild-tag rebuild-tag--tax">Tax value</span>
-                    <strong>What the county taxes</strong>
-                    <p>Set by the county to bill property taxes. It includes the land, and it often comes from a revaluation done a few years ago.</p>
+                <div id="rebuild-details" className={`rebuild-details${isRebuildExpanded ? " is-open" : ""}`} aria-hidden={!isRebuildExpanded}>
+                  <div className="rebuild-grid">
+                    <div>
+                      <span className="rebuild-tag rebuild-tag--tax">Tax value</span>
+                      <strong>What the county taxes</strong>
+                      <p>Set by the county to bill property taxes. It includes the land, and it often comes from a revaluation done a few years ago.</p>
+                    </div>
+                    <div>
+                      <span className="rebuild-tag rebuild-tag--rebuild">Rebuild cost</span>
+                      <strong>What it costs to build again</strong>
+                      <p>Today&rsquo;s price of the materials and labor to rebuild the same home after a total loss. The land is not included, because you would still own it.</p>
+                    </div>
+                    <div>
+                      <span className="rebuild-tag rebuild-tag--why">Why they differ</span>
+                      <strong>Two different jobs</strong>
+                      <p>Building costs move with the market, and older homes can cost more to rebuild than their tax value suggests. The two numbers are commonly far apart.</p>
+                    </div>
                   </div>
-                  <div>
-                    <span className="rebuild-tag rebuild-tag--rebuild">Rebuild cost</span>
-                    <strong>What it costs to build again</strong>
-                    <p>Today&rsquo;s price of the materials and labor to rebuild the same home after a total loss. The land is not included, because you would still own it.</p>
-                  </div>
-                  <div>
-                    <span className="rebuild-tag rebuild-tag--why">Why they differ</span>
-                    <strong>Two different jobs</strong>
-                    <p>Building costs move with the market, and older homes can cost more to rebuild than their tax value suggests. The two numbers are commonly far apart.</p>
-                  </div>
+                  <p className="rebuild-note">
+                    This is why a homeowners policy amount is often higher than a tax value. Insuring a home for its
+                    tax value can leave a gap after a serious loss, so it is worth confirming the rebuild figure
+                    rather than assuming the two match.
+                  </p>
                 </div>
-                <p className="rebuild-note">
-                  This is why a homeowners policy amount is often higher than a tax value. Insuring a home for its
-                  tax value can leave a gap after a serious loss, so it is worth confirming the rebuild figure
-                  rather than assuming the two match.
-                </p>
               </section>
             ) : null}
 
             <ParcelMap property={activeProperty} />
-            <ResourceGroup title="See the home and surrounding property" eyebrow="Photos and maps" links={resources.photos} tone="photos" />
-            <ResourceGroup title="Review location-based hazard information" eyebrow="Hazard resources" links={resources.hazards} tone="hazards" />
-            <ResourceGroup title="Open available county records" eyebrow="Official records" links={resources.records} tone="records" />
-            <ResourceGroup title="Prepare before and after a home insurance claim" eyebrow="Insurance resources" links={AGENCY_RESOURCES} tone="insurance" />
+            <ResourceGroup id="photos-maps" title="See the home and surrounding property" eyebrow="Photos and maps" links={resources.photos} tone="photos" />
+            <ResourceGroup id="hazards" title="Review location-based hazard information" eyebrow="Hazard resources" links={resources.hazards} tone="hazards" />
+            <ResourceGroup id="records" title="Open available county records" eyebrow="Official records" links={resources.records} tone="records" />
+            <ResourceGroup id="insurance-resources" title="Prepare before and after a home insurance claim" eyebrow="Insurance resources" links={AGENCY_RESOURCES} tone="insurance" />
 
             <section className="closing-band">
               <div>

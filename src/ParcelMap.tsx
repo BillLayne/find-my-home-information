@@ -50,7 +50,7 @@ export function ParcelMap({ property }: { property: PublicProperty }) {
   if (!property.parcelRings?.length) return null;
 
   return (
-    <section className="parcel-map-section" aria-labelledby="parcel-map-title">
+    <section id="parcel-map" className="parcel-map-section" aria-labelledby="parcel-map-title">
       <div className="parcel-map-heading">
         <div>
           <p className="eyebrow">Verified parcel location</p>
