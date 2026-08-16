@@ -1,113 +1,149 @@
-# Find My Home Information - AI Handoff
+# Find My Home Information — AI Handoff
 
-Last updated: 2026-07-16
+Last updated: 2026-08-05
 
-Canonical cross-project handoff:
+- **Live site:** https://find-my-home-information.pages.dev/
+- **GitHub repo:** https://github.com/BillLayne/find-my-home-information
+- **Cloudflare Pages project:** `find-my-home-information`
+- **Local path:** `C:\Users\bill\OneDrive\Documents\Playground\find-my-home-information`
 
-- `C:\Users\bill\OneDrive\Documents\Playground\nc-insurance-tools\NC_TOOLS_FIND_MY_HOME_HANDOFF.md`
-- Read it first for the single county-engine architecture, current coverage, privacy rules, and the required NC Tools -> consumer deployment order.
+### Read this first (cross-project canonical)
+`C:\Users\bill\OneDrive\Documents\Playground\nc-insurance-tools\NC_TOOLS_FIND_MY_HOME_HANDOFF.md`
+— the single source of truth for the shared county engine, coverage, privacy rules, and the required deploy order. This file covers the **consumer app** specifically.
 
-- Live site: https://find-my-home-information.pages.dev/
-- GitHub repository: https://github.com/BillLayne/find-my-home-information
-- Cloudflare Pages project: `find-my-home-information`
+---
 
 ## Purpose
 
-This is the separate consumer-facing property resource for Bill Layne Insurance Agency. A visitor enters a North Carolina address and receives available public property facts plus organized links to maps, photographs, hazards, county property records, and insurance resources.
+The public, consumer-facing property resource for Bill Layne Insurance Agency. A visitor types a North Carolina address and gets available public property facts (values, year built, acreage, beds/baths where published) plus organized links to maps, aerial photos, flood/hazard resources, county records, and a quote CTA. It is being promoted on social media, so coverage of populated areas matters.
 
-Design is intentionally foundational in the first release. Preserve the functional architecture when the branded design pass begins.
+This is a **separate product** from the internal NC Insurance Tools staff app — do not merge the two or copy staff features here.
 
-## Critical Boundary
+---
 
-Do not copy or expose staff data from NC Insurance Tools.
+## Critical boundary — never break this
 
-Allowed upstream route:
+The consumer app owns **no county data**. It proxies one upstream route and sanitizes the response:
 
-- `POST https://nc-insurance-tools-gemini.pages.dev/api/lookup`
+- Allowed upstream call: `POST https://nc-insurance-tools-gemini.pages.dev/api/lookup` (server-side only, from the Pages Function)
 
-Never call or expose:
+**Never expose** (none of these are ever requested or mapped): owner name, mailing address, city/state/zip of owner, DOB, mortgage, property notes, property history, uploaded photos, PDFs/documents, staff workflow/assignment data, D1 exports.
 
-- property notes
-- property history
-- uploaded property photos
-- PDFs/documents
-- customer DOB or mortgage information
-- staff workflow or assignment data
-- D1 exports
+The sanitizer `shared/property.ts` → `buildPublicPropertyResponse()` is an **explicit allow-list**: it constructs the public object field-by-field and simply never reads `owner`, `mailingAddress`, or the owner city/state/zip fields, even though the upstream `/api/lookup` response contains them (the agency app is staff-facing). This is the strongest form of the guarantee — a new private field added upstream cannot leak here unless someone deliberately maps it. `tests/property.test.ts` locks this in; keep those tests green.
 
-The consumer sanitizer is `shared/property.ts`. It intentionally omits owner and mailing-address fields even though some county responses contain them.
+Verified 2026-08-05 against production for Johnston/Wayne/Franklin: response keys are values/deed/year/acres/links/officialAddress only — no owner, no mailing.
+
+---
 
 ## Architecture
 
-- `src/App.tsx`: address search and consumer result UI
-- `src/LegalPage.tsx`: public Privacy Notice and Terms of Use routes
-- `src/ParcelMap.tsx`: consumer-safe highlighted parcel map
-- `src/index.css`: current foundation styling
-- `src/lib/api.ts`: browser call to the same-origin proxy
-- `shared/property.ts`: response types, URL validation, safe upstream mapping, FEMA link generation
-- `functions/api/property.ts`: Cloudflare proxy to NC Insurance Tools
-- `functions/api/health.ts`: deployment health check
-- `tests/property.test.ts`: privacy and link-generation regression tests
+Request flow:
 
-No D1 database is used. Searches are not intentionally persisted.
+```
+Browser (src/lib/api.ts)
+  → POST /api/property                       (same-origin)
+  → functions/api/property.ts                (Cloudflare Pages Function)
+      → POST {PROPERTY_LOOKUP_URL}/api/lookup (nc-insurance-tools-gemini)
+      → buildPublicPropertyResponse()          (shared/property.ts sanitizer)
+  → sanitized JSON (Cache-Control: no-store, X-Robots-Tag: noindex)
+```
 
-When NC Tools returns verified parcel geometry, the consumer mapper permits only:
+File map (all verified current):
 
-- parcel boundary coordinate rings
-- searched-address latitude and longitude
-- parcel match method
+- `src/App.tsx` — address search + consumer result UI. **Holds the "N integrated counties" copy string — bump it when upstream coverage changes.**
+- `src/LegalPage.tsx` — `/privacy` and `/terms` routes
+- `src/ParcelMap.tsx` — Leaflet + OpenStreetMap parcel highlight (consumer-safe: only parcel rings, searched lat/lon, match method)
+- `src/index.css` — styling
+- `src/lib/api.ts` — browser call to the same-origin `/api/property` proxy
+- `shared/property.ts` — response types, URL protocol validation, the safe upstream→public mapper, FEMA link builder
+- `functions/api/property.ts` — the proxy (15s timeout, forwards `{address}`, applies sanitizer, sets no-store/noindex headers)
+- `functions/api/health.ts` — `GET /api/health` → `{ ok: true }`
+- `tests/property.test.ts` — privacy + link-generation regression tests
 
-The map uses Leaflet and OpenStreetMap tiles. Owner and mailing information remain excluded. When a county returns no parcel, the UI shows a limited-data notice instead of a grid of empty fact boxes.
+No D1, no database, no persistence of searched addresses. Config is one Pages var: `PROPERTY_LOOKUP_URL` (in `wrangler.toml`), defaulting to the agency `/api/lookup` if unset.
 
-The street-address comparison intentionally ignores the geocoder's added city, state, and ZIP. Do not restore a full-string comparison or matching county records will be incorrectly labeled as different addresses.
+Behavioral notes:
+- Street-address comparison (`recordAddressDiffers`) intentionally compares **only the street line** (abbreviation-normalized), ignoring the geocoder's added city/state/zip. Do not restore a full-string compare — it wrongly flags matching records as different addresses.
+- When a county returns no parcel, the UI shows a limited-data notice + statewide FEMA/ReadyNC/flood links rather than a grid of empty boxes.
+- `officialAddress` = upstream `siteAddress` (the real property address, injected by the engine — including the two-step counties). Falls back to the geocoded address when absent.
 
-Public legal routes:
+---
 
-- `/privacy`
-- `/terms`
+## Coverage
+
+**41 counties** integrated for automatic parcel details as of 2026-08-05. `App.tsx` currently reads "41 integrated counties" and matches.
+
+**`GET https://nc-insurance-tools-gemini.pages.dev/api/counties` is authoritative** — it returns the live list. Never claim automated details for all 100 counties. Statewide FEMA/flood/ReadyNC/map links are always provided even without a county record.
+
+County adapters are **never** duplicated here. A county is built + deployed in NC Insurance Tools first; this app inherits it through `/api/lookup`, and the only change needed here is bumping the count string in `App.tsx`.
+
+Current 41: Alamance, Alexander, Alleghany, Ashe, Avery, Buncombe, Burke, Cabarrus, Caldwell, Caswell, Catawba, Chatham, Cumberland, Davidson, Davie, Durham, Forsyth, Franklin, Gaston, Guilford, Harnett, Iredell, Jackson, Johnston, Lee, Lincoln, Mecklenburg, New Hanover, Orange, Randolph, Rockingham, Rowan, Sampson, Stokes, Surry, Union, Wake, Watauga, Wayne, Wilkes, Yadkin.
+
+---
+
+## Deploy
+
+**Required order: upstream first.** If a change depends on new county data, deploy `nc-insurance-tools` before this app. Deploying the consumer alone is fine for UI/copy-only changes.
+
+Two deploy paths:
+
+1. **Manual (wrangler)** — the reliable path:
+   ```bash
+   npm run build && npm run cf:deploy
+   ```
+   (`cf:deploy` = `wrangler pages deploy dist --project-name find-my-home-information`)
+
+2. **GitHub Actions** (`.github/workflows/deploy.yml`) — runs `test → lint → build → deploy` on push to `main`, but the deploy step only fires if the repo secret `CLOUDFLARE_API_TOKEN` (+ `CLOUDFLARE_ACCOUNT_ID`) is set. Treat manual wrangler as the source of truth unless you've confirmed the secrets exist.
+
+**GOTCHA (hit 2026-08-05):** wrangler's cached Cloudflare OAuth login can expire mid-session and fail with `Failed to fetch auth token: 400 Bad Request`. Fix: run `wrangler login` in a real terminal window (it opens a browser to approve), then re-run the deploy. This is not a code problem.
+
+**GOTCHA:** Cloudflare Pages **Functions** take ~30–60s to propagate after deploy, and the edge briefly serves the old bundle. Re-test with a cache-buster before concluding a deploy failed.
+
+---
 
 ## Commands
 
-```powershell
+```bash
 npm install
-npm test
-npm run lint
-npm run build
-npm run dev
-npm run cf:deploy
+npm run dev        # Vite dev server on http://localhost:4175 (proxies /api/property to the live agency API)
+npm test           # privacy + link tests (tsx --test)
+npm run lint       # tsc --noEmit
+npm run build      # vite build → dist
+npm run cf:dev     # test the Pages Function locally against the built dist
+npm run cf:deploy  # deploy dist to Cloudflare Pages
 ```
 
-## Product Sections
+Live smoke test (production):
+```bash
+curl -s -X POST https://find-my-home-information.pages.dev/api/property \
+  -H "Content-Type: application/json" -d '{"address":"395 Spaniel Ln, Clayton, NC 27520"}'
+```
+Confirm the JSON has no `owner`/`mailing` keys.
 
-1. Address search
-2. Public property summary
-3. Photos and maps
-4. Hazard resources
-5. Official public records
-6. Bill Layne Insurance resources and quote CTA
-
-## Known Coverage Boundary
-
-The upstream NC Insurance Tools engine currently has automatic county integrations for 31 counties. The live `/api/counties` route is authoritative. The consumer page must not claim full automated parcel details for all 100 counties until that is true. Statewide FEMA, ReadyNC, and map resources can still be provided when an automatic county record is unavailable.
-
-County adapters are never duplicated here. A county is implemented and deployed in NC Insurance Tools first; this project inherits its results through `/api/lookup`, applies `shared/property.ts`, and then updates any stale presentation count/copy.
-
-## Next Design Phase
-
-- finalize the branded custom domain and canonical URL
-- create final hero/property imagery
-- add GA4 and Microsoft Clarity event tracking
-- add managed Cloudflare Turnstile after production widget keys are created
-- add a statewide unsupported-county fallback directory
-- audit every county for direct GIS, parcel card, deed, and aerial destinations
-- add print/save report behavior
-- add custom domain, recommended `homeinfo.billlayneinsurance.com`
+---
 
 ## Do Not Break
 
-- server-side proxy boundary
-- owner/mailing-address omission
-- `Cache-Control: no-store`
-- `X-Robots-Tag: noindex` on API responses
-- external URL protocol validation
-- single upstream source of truth in NC Insurance Tools
+- Server-side proxy boundary (browser never calls the agency API directly)
+- Owner / mailing-address omission in `shared/property.ts`
+- `Cache-Control: no-store` and `X-Robots-Tag: noindex` on API responses
+- External URL protocol validation (`safeUrl` — only http/https pass through)
+- Single upstream source of truth in NC Insurance Tools (no duplicated county adapters)
+- Street-only address comparison (don't restore full-string compare)
+- Green `tests/property.test.ts`
+
+---
+
+## Recent changes
+
+- **2026-08-05** — Bumped integrated-county copy 35 → 41 after the agency engine added six eastern counties (Cumberland, Chatham, Wayne, Johnston, Orange, Franklin) for the social-media promotion. No consumer-side code changed beyond the count; privacy filter re-verified live for the new counties. Commit `365ed8e`.
+
+## Pending / next phase
+
+- Custom domain (recommended `homeinfo.billlayneinsurance.com`) + canonical URL
+- Final branded hero/property imagery
+- GA4 + Microsoft Clarity event tracking
+- Managed Cloudflare Turnstile once production widget keys exist
+- Statewide unsupported-county fallback directory
+- Browser audit of every county's GIS / parcel-card / deed / aerial destination links
+- Print/save report behavior
