@@ -85,13 +85,13 @@ Behavioral notes:
 
 ## Coverage
 
-**41 counties** integrated for automatic parcel details as verified on 2026-08-16.
+**47 counties** integrated for automatic parcel details as verified on 2026-08-16.
 
 **`GET https://nc-insurance-tools-gemini.pages.dev/api/counties` is authoritative** — it returns the live list. Never claim automated details for all 100 counties. Statewide FEMA/flood/ReadyNC/map links are always provided even without a county record.
 
-County adapters are **never** duplicated here. A county is built + deployed in NC Insurance Tools first; this app inherits it through `/api/lookup`. The visible count is fetched through the privacy-safe same-origin `/api/counties` endpoint and falls back to 41 if the count service is temporarily unavailable, so normal coverage additions do not require a consumer UI edit.
+County adapters are **never** duplicated here. A county is built + deployed in NC Insurance Tools first; this app inherits it through `/api/lookup`. The visible count is fetched through the privacy-safe same-origin `/api/counties` endpoint and falls back to the `coverageCount` initial state in `src/App.tsx` (currently 47) if the count service is temporarily unavailable, so normal coverage additions do not require a consumer UI edit.
 
-Current 41: Alamance, Alexander, Alleghany, Ashe, Avery, Buncombe, Burke, Cabarrus, Caldwell, Caswell, Catawba, Chatham, Cumberland, Davidson, Davie, Durham, Forsyth, Franklin, Gaston, Guilford, Harnett, Iredell, Jackson, Johnston, Lee, Lincoln, Mecklenburg, New Hanover, Orange, Randolph, Rockingham, Rowan, Sampson, Stokes, Surry, Union, Wake, Watauga, Wayne, Wilkes, Yadkin.
+Current 47: Alamance, Alexander, Alleghany, Ashe, Avery, Brunswick, Buncombe, Burke, Cabarrus, Caldwell, Caswell, Catawba, Chatham, Cumberland, Davidson, Davie, Durham, Forsyth, Franklin, Gaston, Guilford, Harnett, Henderson, Iredell, Jackson, Johnston, Lee, Lincoln, Mecklenburg, Moore, Nash, New Hanover, Onslow, Orange, Pitt, Randolph, Rockingham, Rowan, Sampson, Stokes, Surry, Union, Wake, Watauga, Wayne, Wilkes, Yadkin.
 
 ---
 
