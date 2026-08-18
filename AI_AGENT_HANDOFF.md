@@ -1,6 +1,6 @@
 # Find My Home Information — AI Handoff
 
-Last updated: 2026-08-16
+Last updated: 2026-08-18
 
 - **Live site:** https://find-my-home-information.pages.dev/
 - **GitHub repo:** https://github.com/BillLayne/find-my-home-information
@@ -85,13 +85,13 @@ Behavioral notes:
 
 ## Coverage
 
-**47 counties** integrated for automatic parcel details as verified on 2026-08-16.
+**53 counties** integrated for automatic parcel details as verified on 2026-08-18. This now covers every NC 100k+ population market; upstream expansion is switching to add-on-demand (new counties only when a real quote needs one).
 
 **`GET https://nc-insurance-tools-gemini.pages.dev/api/counties` is authoritative** — it returns the live list. Never claim automated details for all 100 counties. Statewide FEMA/flood/ReadyNC/map links are always provided even without a county record.
 
-County adapters are **never** duplicated here. A county is built + deployed in NC Insurance Tools first; this app inherits it through `/api/lookup`. The visible count is fetched through the privacy-safe same-origin `/api/counties` endpoint and falls back to the `coverageCount` initial state in `src/App.tsx` (currently 47) if the count service is temporarily unavailable, so normal coverage additions do not require a consumer UI edit.
+County adapters are **never** duplicated here. A county is built + deployed in NC Insurance Tools first; this app inherits it through `/api/lookup`. The visible count is fetched through the privacy-safe same-origin `/api/counties` endpoint and falls back to the `coverageCount` initial state in `src/App.tsx` (currently 53) if the count service is temporarily unavailable, so normal coverage additions do not require a consumer UI edit.
 
-Current 47: Alamance, Alexander, Alleghany, Ashe, Avery, Brunswick, Buncombe, Burke, Cabarrus, Caldwell, Caswell, Catawba, Chatham, Cumberland, Davidson, Davie, Durham, Forsyth, Franklin, Gaston, Guilford, Harnett, Henderson, Iredell, Jackson, Johnston, Lee, Lincoln, Mecklenburg, Moore, Nash, New Hanover, Onslow, Orange, Pitt, Randolph, Rockingham, Rowan, Sampson, Stokes, Surry, Union, Wake, Watauga, Wayne, Wilkes, Yadkin.
+Current 53: Alamance, Alexander, Alleghany, Ashe, Avery, Brunswick, Buncombe, Burke, Cabarrus, Caldwell, Caswell, Catawba, Chatham, Cleveland, Craven, Cumberland, Davidson, Davie, Durham, Forsyth, Franklin, Gaston, Guilford, Harnett, Haywood, Henderson, Iredell, Jackson, Johnston, Lee, Lincoln, Mecklenburg, Moore, Nash, New Hanover, Onslow, Orange, Pitt, Randolph, Robeson, Rockingham, Rowan, Sampson, Stanly, Stokes, Surry, Union, Wake, Watauga, Wayne, Wilkes, Wilson, Yadkin.
 
 ---
 

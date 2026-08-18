@@ -140,7 +140,7 @@ export function App() {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [coverageCount, setCoverageCount] = useState(47);
+  const [coverageCount, setCoverageCount] = useState(53);
   const [isRebuildExpanded, setIsRebuildExpanded] = useState(false);
   const [reportStatus, setReportStatus] = useState("");
   const resultsRef = useRef<HTMLDivElement>(null);
