@@ -148,7 +148,9 @@ function propertyResources(property: PublicProperty) {
  * customer came here having already typed their address once, and asking for
  * it a second time is how a lead gets abandoned.
  */
-const QUOTE_FORM_URL = "https://www.billlayneinsurance.com/home-quote.html";
+// The canonical form: /home-quote.html 308-redirects here, and linking at
+// the .html would spend a round trip to learn that.
+const QUOTE_FORM_URL = "https://www.billlayneinsurance.com/home-quote";
 
 /** The 5-digit ZIP out of a county-formatted address, when there is one. */
 const zipFrom = (address: string): string => /\b(\d{5})(?:-\d{4})?\s*$/.exec(address.trim())?.[1] ?? "";
