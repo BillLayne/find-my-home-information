@@ -130,6 +130,29 @@ function propertyResources(property: PublicProperty) {
   };
 }
 
+/**
+ * Where "Request an insurance review" goes.
+ *
+ * This was a mailto:, and a mailto: only does anything for a visitor whose
+ * browser has a desktop mail client registered as the handler. Someone reading
+ * Gmail in a tab -- most of this tool's traffic -- clicked the button and
+ * NOTHING happened at all: no error, no tab, no compose window. The link was
+ * well formed the whole time, which is why it looks fine when tested on a
+ * phone, where the Mail app picks it up.
+ *
+ * It now points at the agency's own home quote form, which is an ordinary
+ * https page that works everywhere and feeds the lead path Bill already
+ * watches, rather than depending on software the visitor may not have.
+ *
+ * The address and ZIP ride along so the form arrives partly filled: the
+ * customer came here having already typed their address once, and asking for
+ * it a second time is how a lead gets abandoned.
+ */
+const QUOTE_FORM_URL = "https://www.billlayneinsurance.com/home-quote.html";
+
+/** The 5-digit ZIP out of a county-formatted address, when there is one. */
+const zipFrom = (address: string): string => /\b(\d{5})(?:-\d{4})?\s*$/.exec(address.trim())?.[1] ?? "";
+
 export function App() {
   const path = window.location.pathname.replace(/\/+$/, "") || "/";
   if (path === "/privacy") return <LegalPage kind="privacy" />;
@@ -283,9 +306,17 @@ export function App() {
     }
   }
 
-  const quoteHref = activeProperty
-    ? `mailto:save@billlayneinsurance.com?subject=${encodeURIComponent(`Home insurance review - ${activeProperty.searchedAddress}`)}&body=${encodeURIComponent(`Hello Bill Layne Insurance,\n\nI used the Find My Home Information tool and would like help reviewing insurance for:\n\n${activeProperty.searchedAddress}\n${activeProperty.county} County\nParcel: ${activeProperty.parcelId || activeProperty.pin || "Not available"}\n\nPlease contact me to continue.`)}`
-    : "mailto:save@billlayneinsurance.com?subject=Home%20insurance%20review";
+  const quoteHref = (() => {
+    const url = new URL(QUOTE_FORM_URL);
+    if (activeProperty) {
+      const address = activeProperty.searchedAddress || "";
+      if (address) url.searchParams.set("address", address);
+      const zip = zipFrom(address);
+      if (zip) url.searchParams.set("zip", zip);
+      if (activeProperty.county) url.searchParams.set("county", activeProperty.county);
+    }
+    return url.toString();
+  })();
 
   return (
     <div className="app-shell">
