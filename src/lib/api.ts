@@ -1,10 +1,11 @@
 import { buildPublicPropertyResponse, type PublicPropertyResponse } from "../../shared/property";
 
-export async function findProperty(address: string) {
+export async function findProperty(address: string, signal?: AbortSignal) {
   const response = await fetch("/api/property", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ address }),
+    signal,
   });
 
   const payload = await response.json() as PublicPropertyResponse | { error?: string } | unknown;

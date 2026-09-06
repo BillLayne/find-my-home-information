@@ -3,6 +3,7 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { ExternalLink, MapPinned } from "lucide-react";
 import type { PublicProperty } from "../shared/property";
+import { destinationKind } from "./lib/report";
 
 export function ParcelMap({ property }: { property: PublicProperty }) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -59,7 +60,7 @@ export function ParcelMap({ property }: { property: PublicProperty }) {
         </div>
         {property.links.gisParcel || property.links.gis ? (
           <a href={property.links.gisParcel || property.links.gis} target="_blank" rel="noopener noreferrer">
-            Open official parcel source <ExternalLink size={16} />
+            {destinationKind(property.links.gisParcel || property.links.gis, property) === "record" ? "Open parcel record" : "Open county GIS"} <ExternalLink size={16} />
           </a>
         ) : null}
       </div>

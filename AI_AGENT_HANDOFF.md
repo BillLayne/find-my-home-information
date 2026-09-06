@@ -1,6 +1,37 @@
 # Find My Home Information — AI Handoff
 
-Last updated: 2026-08-18
+Last updated: 2026-09-06
+
+## Current release: deployment approved
+
+The user explicitly approved publishing the 2026-09-06 frontend revision. Release checks passed; deployment and production verification are in progress. Do not assume the production revision until the verification record below is updated.
+
+- Preview: `http://127.0.0.1:4186/` (local Wrangler Pages development server, running the built `dist` and the real Pages Functions).
+- Start again if needed: `npm run build`, then `npm run cf:dev -- --port 4186 --ip 127.0.0.1`.
+- Existing desktop/mobile hero and four supporting WebP images are retained. Initial search is more compact; a successful search becomes a focused report without the large hero.
+- Facts and four compact shortcuts precede agency calls to action. Desktop has active-section navigation; tablet/phone use an accessible section selector. All report sections remain available.
+- Inline address editing retains the previous report through validation errors, empty results, outages, and canceled requests. Abort handling prevents a late canceled response from replacing the current report. No search history is saved.
+- Detailed GIS/aerial links now appear once in Records, rather than also in Photos. Compact shortcuts and the map's source link are intentionally retained.
+- Property-specific URL labels require the current parcel identifier in the URL. Address searches and general destinations have distinct labels. These are conservative URL classifications, **not a guarantee that a third-party site loads correctly**.
+- Copy address/parcel controls have status announcements and a selectable fallback when clipboard access is blocked. For a county-address mismatch, Copy address uses the county's displayed address.
+- Share links optionally include a public `parcel` identifier to restore the selected candidate. Incoming share parameters are consumed after lookup; no local storage or database was added.
+- Agency CTAs still use `/home-quote` with address/ZIP/county, never the old mailto or redirecting `.html` URL. The former "Email this property" label is corrected.
+- Backend Functions, shared sanitizer, county adapters, authentication, deployment configuration, and public-data boundaries are unchanged. Only the browser API wrapper gained an optional AbortSignal.
+
+### Verification completed on 2026-09-06
+
+- `npm test`: 12 passing tests (existing 7 plus 5 frontend-helper regressions).
+- `npm run lint`: TypeScript passes. `npm run build`: production build passes. `git diff --check`: passes.
+- Real local-Function lookups: Lee (`800 Creekwood Rd, Sanford, NC 27330`) and Watauga (`104 Mockingbird Ln, Blowing Rock, NC`). Public response excludes private fields; no-store/noindex headers verified.
+- Playwright: desktop 1440px, tablet 820px, phone 390px, narrow phone 320px. Landing/report fit checked, including all eight facts and unusually long record text. Screenshots visually reviewed.
+- Browser-only mock responses exercised service errors, empty results, limited records, multiple candidates, shared-candidate selection, delayed requests and cancellation. These fixtures are not in the application bundle.
+- Tested copy/share branches using browser API stubs (including clipboard failure), the print action invoking `window.print`, and print CSS revealing the tax explanation while hiding controls. Physical printer output and real mobile OS share sheets remain unverified.
+- Privacy/Terms routes, loaded image assets, visible inline errors, keyboard focus, and mobile section navigation checked. No dark theme existed; none was added.
+- Screenshots and preview logs: `output/playwright/` (gitignored).
+
+### Remaining integration boundary
+
+Lee's supplied GIS link still opens the generic county map. This revision labels it honestly and provides copy controls; it does **not** repair upstream deep links or audit every county. Any county adapter/deep-link fixes belong in NC Insurance Tools and require separate integration work. Do not report that all counties now direct-link successfully.
 
 - **Live site:** https://find-my-home-information.pages.dev/
 - **GitHub repo:** https://github.com/BillLayne/find-my-home-information
@@ -57,7 +88,9 @@ Browser (src/lib/api.ts)
 
 File map (all verified current):
 
-- `src/App.tsx` — address search, premium result navigation, quick links, report actions, and consumer result UI
+- `src/App.tsx` — initial address search, inline report editor, lookup/cancel state, consumer landing page
+- `src/PropertyReport.tsx` — report facts, section navigation, resource groups, copy/share/print, and agency actions
+- `src/lib/report.ts` — frontend URL classification, search validation, and public share-link construction
 - `src/LegalPage.tsx` — `/privacy` and `/terms` routes
 - `src/ParcelMap.tsx` — Leaflet + OpenStreetMap parcel highlight (consumer-safe: only parcel rings, searched lat/lon, match method)
 - `src/index.css` — styling
@@ -69,6 +102,7 @@ File map (all verified current):
 - `functions/api/health.ts` — `GET /api/health` → `{ ok: true }`
 - `tests/property.test.ts` — privacy + link-generation regression tests
 - `tests/coverage.test.ts` — coverage URL and unique-count regression tests
+- `tests/report.test.ts` — frontend URL classification, input validation, and share-link regression tests
 
 No D1, no database, no persistence of searched addresses. Config is one Pages var: `PROPERTY_LOOKUP_URL` (in `wrangler.toml`), defaulting to the agency `/api/lookup` if unset.
 
@@ -76,10 +110,10 @@ Behavioral notes:
 - Street-address comparison (`recordAddressDiffers`) intentionally compares **only the street line** (abbreviation-normalized), ignoring the geocoder's added city/state/zip. Do not restore a full-string compare — it wrongly flags matching records as different addresses.
 - When a county returns no parcel, the UI shows a limited-data notice + statewide FEMA/ReadyNC/flood links rather than a grid of empty boxes.
 - `officialAddress` = upstream `siteAddress` (the real property address, injected by the engine — including the two-step counties). Falls back to the geocoded address when absent.
-- The sticky report navigator links to Overview, Home links, Parcel map when available, Photos, Hazards, and Records. Desktop includes a New address control; the fixed mobile action dock already supplies this action on small screens.
-- "Your home links" keeps the most useful destinations directly below the property summary: county GIS/parcel, property card when available, Google Maps/Street View, and FEMA.
+- The local revision's sticky navigator links to Overview, Parcel map when available, Records, Photos, Hazards, and Resources. Tablet/phone have a section selector; Change address opens an inline editor. The original `#home-links` anchor remains supported.
+- Property shortcuts immediately follow the facts: property card when available, county GIS/aerial map, Google Maps/Street View, and FEMA.
 - The tax-value/rebuild-cost explanation is intentionally compact and expands through "Learn why." Print output always expands it.
-- Print / Save PDF uses the browser print dialog. Share report uses the native Web Share API when available and copies a deep link otherwise. Deep links use `?address=` and do not persist a search history.
+- Print / PDF uses the browser print dialog. Share report uses the native Web Share API when available and copies a deep link otherwise. Deep links use `?address=` with an optional public `parcel` identifier and do not persist an application search history.
 
 ---
 
@@ -152,6 +186,8 @@ Confirm the property JSON has no `owner`/`mailing` keys and the county response 
 ---
 
 ## Recent changes
+
+- **2026-09-06** — Consumer frontend workflow and accessibility revision described above. Existing data engine and imagery preserved. Deployment explicitly approved by the user.
 
 - **2026-08-16** — Premium consumer UX pass: sticky report navigation, immediate home-resource shortcuts, compact expandable rebuild-cost education, print/save-PDF and share/deep-link controls, desktop call action, larger premium containers, responsive mobile refinements, and a privacy-safe dynamic county count. Full and limited-data address flows verified locally at desktop and phone widths.
 - **2026-08-05** — Bumped integrated-county copy 35 → 41 after the agency engine added six eastern counties (Cumberland, Chatham, Wayne, Johnston, Orange, Franklin) for the social-media promotion. No consumer-side code changed beyond the count; privacy filter re-verified live for the new counties. Commit `365ed8e`.
