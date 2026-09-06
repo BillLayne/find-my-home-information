@@ -2,9 +2,15 @@
 
 Last updated: 2026-09-06
 
-## Current release: deployment approved
+## Current release: live and verified
 
-The user explicitly approved publishing the 2026-09-06 frontend revision. Release checks passed; deployment and production verification are in progress. Do not assume the production revision until the verification record below is updated.
+The user explicitly approved publishing the 2026-09-06 frontend revision. It is now deployed and verified at https://find-my-home-information.pages.dev/.
+
+- Release code commit: `17c6b8c` (`Improve consumer property report and mobile search workflow`).
+- Cloudflare production deployment: `b2503154`, https://b2503154.find-my-home-information.pages.dev/.
+- Production bundle verified: `assets/index-BQC2tRSm.js` and `assets/index-CQN7LKZn.css`.
+- Live smoke checks passed: main page HTTP 200, `/api/health`, Lee and Watauga lookups, visible property facts and destination labels, desktop/mobile report rendering, and privacy-safe `no-store` response. Screenshots: `output/playwright/live-report-desktop.png` and `live-report-mobile.png`.
+- Future changes still require explicit deployment approval. County deep-link repairs remain a separate upstream task.
 
 - Preview: `http://127.0.0.1:4186/` (local Wrangler Pages development server, running the built `dist` and the real Pages Functions).
 - Start again if needed: `npm run build`, then `npm run cf:dev -- --port 4186 --ip 127.0.0.1`.
@@ -187,7 +193,7 @@ Confirm the property JSON has no `owner`/`mailing` keys and the county response 
 
 ## Recent changes
 
-- **2026-09-06** — Consumer frontend workflow and accessibility revision described above. Existing data engine and imagery preserved. Deployment explicitly approved by the user.
+- **2026-09-06** — Consumer frontend workflow and accessibility revision published with explicit user approval. Existing data engine and imagery preserved. Production deployment `b2503154` and the main domain verified after release.
 
 - **2026-08-16** — Premium consumer UX pass: sticky report navigation, immediate home-resource shortcuts, compact expandable rebuild-cost education, print/save-PDF and share/deep-link controls, desktop call action, larger premium containers, responsive mobile refinements, and a privacy-safe dynamic county count. Full and limited-data address flows verified locally at desktop and phone widths.
 - **2026-08-05** — Bumped integrated-county copy 35 → 41 after the agency engine added six eastern counties (Cumberland, Chatham, Wayne, Johnston, Orange, Franklin) for the social-media promotion. No consumer-side code changed beyond the count; privacy filter re-verified live for the new counties. Commit `365ed8e`.
