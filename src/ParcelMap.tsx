@@ -17,17 +17,27 @@ export function ParcelMap({ property }: { property: PublicProperty }) {
       zoomControl: true,
     });
 
+    // Street map underneath as a fallback: if an aerial tile is unavailable the
+    // street tile shows through instead of a blank square.
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution: "&copy; OpenStreetMap contributors",
-      maxZoom: 19,
+      maxZoom: 20,
+      maxNativeZoom: 19,
+    }).addTo(map);
+
+    // North Carolina statewide aerial photography (public, NC OneMap).
+    L.tileLayer("https://services.nconemap.gov/secure/rest/services/Imagery/Orthoimagery_Latest_cached/ImageServer/tile/{z}/{y}/{x}", {
+      attribution: "Imagery: NC OneMap",
+      maxZoom: 20,
+      maxNativeZoom: 20,
     }).addTo(map);
 
     const rings = property.parcelRings.map((ring) => ring.map(([longitude, latitude]) => [latitude, longitude] as L.LatLngTuple));
     const parcel = L.polygon(rings, {
-      color: "#0b6f9f",
-      weight: 4,
+      color: "#f6c453",
+      weight: 3,
       fillColor: "#f2b84b",
-      fillOpacity: 0.24,
+      fillOpacity: 0.1,
     }).addTo(map);
 
     if (property.latitude != null && property.longitude != null) {
@@ -40,7 +50,7 @@ export function ParcelMap({ property }: { property: PublicProperty }) {
       }).addTo(map).bindTooltip("Searched address");
     }
 
-    map.fitBounds(parcel.getBounds(), { padding: [28, 28], maxZoom: 18 });
+    map.fitBounds(parcel.getBounds(), { padding: [36, 36], maxZoom: 19 });
     requestAnimationFrame(() => map.invalidateSize());
 
     return () => {
@@ -53,7 +63,7 @@ export function ParcelMap({ property }: { property: PublicProperty }) {
   return (
     <section id="parcel-map" className="parcel-map-section" aria-labelledby="parcel-map-title">
       <div className="parcel-map-frame">
-        <span className="parcel-map-chip"><MapPinned size={14} aria-hidden="true" />County parcel boundary</span>
+        <span className="parcel-map-chip"><MapPinned size={14} aria-hidden="true" />Aerial view &middot; county parcel boundary</span>
         <div className="parcel-map" ref={containerRef} aria-label={`Highlighted parcel map for ${property.officialAddress}`} />
       </div>
       <div className="parcel-map-footer">
