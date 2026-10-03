@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { AlertTriangle, ArrowRight, Building2, Camera, CheckCircle2, ChevronDown, ChevronUp, Copy, ExternalLink, FileSearch, FileText, Flame, FolderSearch, LandPlot, MapPin, Phone, Printer, Search, Share2, ShieldCheck, Waves } from "lucide-react";
+import { AlertTriangle, ArrowRight, Bath, BedDouble, Building2, CalendarDays, Camera, CheckCircle2, ChevronDown, ChevronRight, ChevronUp, Coins, Copy, ExternalLink, FileSearch, FileText, Flame, FolderSearch, Home, LandPlot, Layers, MapPin, Pencil, Phone, Printer, Share2, Shield, ShieldCheck, Trees, Warehouse, Waves } from "lucide-react";
 import type { PublicProperty, PublicPropertyResponse } from "../shared/property";
 import { destinationKind, destinationLabel, propertyShareUrl, type DestinationKind } from "./lib/report";
 import { ParcelMap } from "./ParcelMap";
@@ -14,6 +14,14 @@ const AGENCY_RESOURCES: ResourceLink[] = [
   { label: "Claims Inventory Worksheet", description: "Organize damaged or missing belongings after a covered loss.", href: "https://www.billlayneinsurance.com/claims-center/claims-inventory.html", icon: FileText, source: "Agency resource" },
   { label: "Send Documents Securely", description: "Send policy documents, photographs, inspections, or lender information.", href: "https://www.sendbilldocs.com/", icon: FolderSearch, source: "Agency resource" },
 ];
+
+// County records are stored in capitals. Show the heading in title case; the
+// copy buttons and outbound links still use the record exactly as supplied.
+const KEEP_UPPER = new Set(["NC", "US", "NE", "NW", "SE", "SW", "PO", "II", "III", "IV"]);
+function displayAddress(value: string) {
+  if (value !== value.toUpperCase()) return value;
+  return value.split(" ").map((word) => KEEP_UPPER.has(word) || /\d/.test(word) ? word : word.charAt(0) + word.slice(1).toLowerCase()).join(" ");
+}
 
 const formatNumber = (value: number) => new Intl.NumberFormat("en-US").format(value);
 const formatCurrency = (value: number) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(value);
@@ -82,6 +90,8 @@ export function PropertyReport({ property, response, selectedIndex, onSelect, on
       const threshold = (document.querySelector(".result-nav")?.getBoundingClientRect().height || 60) + 40;
       let current = sections[0].id;
       for (const section of sections) {
+        // On wide screens the parcel map sits beside the overview, not below it.
+        if (section.id === "parcel-map" && window.innerWidth > 900) continue;
         if ((document.getElementById(section.id)?.getBoundingClientRect().top ?? Infinity) <= threshold) current = section.id;
       }
       setActiveSection(current);
@@ -124,29 +134,55 @@ export function PropertyReport({ property, response, selectedIndex, onSelect, on
   }
 
   const facts = [
-    { label: "Heated area", value: property.heatedArea ? `${formatNumber(property.heatedArea)} sq ft` : undefined },
-    { label: "Year built", value: property.yearBuilt ? String(property.yearBuilt) : undefined },
-    { label: "Acreage", value: property.totalAcres == null ? undefined : formatNumber(property.totalAcres) },
-    { label: "Assessed value", value: property.totalValue == null ? undefined : formatCurrency(property.totalValue) },
-    { label: "Bedrooms", value: property.bedrooms == null ? undefined : String(property.bedrooms) },
-    { label: "Bathrooms", value: property.fullBaths == null ? undefined : `${property.fullBaths} full${property.halfBaths ? `, ${property.halfBaths} half` : ""}` },
-    { label: "Exterior", value: property.exteriorWall },
-    { label: "Roof", value: property.roofCover || property.roofStructure },
-  ].filter((fact): fact is { label: string; value: string } => Boolean(fact.value));
+    { label: "Heated area", icon: Home, value: property.heatedArea ? `${formatNumber(property.heatedArea)} sq ft` : undefined },
+    { label: "Year built", icon: CalendarDays, value: property.yearBuilt ? String(property.yearBuilt) : undefined },
+    { label: "Acreage", icon: Trees, value: property.totalAcres == null ? undefined : `${formatNumber(property.totalAcres)} ${property.totalAcres === 1 ? "acre" : "acres"}` },
+    { label: "Bedrooms", icon: BedDouble, value: property.bedrooms == null ? undefined : String(property.bedrooms) },
+    { label: "Bathrooms", icon: Bath, value: property.fullBaths == null ? undefined : `${property.fullBaths} full${property.halfBaths ? `, ${property.halfBaths} half` : ""}` },
+    { label: "Tax assessed value", icon: Coins, value: property.totalValue == null ? undefined : formatCurrency(property.totalValue) },
+    { label: "Exterior", icon: Layers, value: property.exteriorWall },
+    { label: "Roof", icon: Warehouse, value: property.roofCover || property.roofStructure },
+  ].filter((fact): fact is { label: string; icon: typeof MapPin; value: string } => Boolean(fact.value));
+  const factColumns = facts.length === 1 ? 1 : facts.length === 2 || facts.length === 4 ? 2 : 3;
   const shortcuts = [
-    { ...resources.records[1], label: "Property card" },
-    { ...resources.records[0], label: "GIS & aerial map" },
-    { ...resources.photos[0], label: "Street View" },
-    { ...resources.hazards[0], label: "FEMA flood map" },
+    { ...resources.records[1], label: "Property card", hint: "County records" },
+    { ...resources.records[0], label: "GIS & aerial map", hint: "Parcel details" },
+    { ...resources.photos[0], label: "Street View", hint: "Explore the address" },
+    { ...resources.hazards[0], label: "FEMA flood map", hint: "Check mapped flood zones" },
   ].filter((link) => link.href);
   const parcel = property.parcelId || property.pin;
   const manualSearch = resources.records.some((link) => link.href && link.kind === "website");
+  const hasMap = Boolean(property.parcelRings?.length);
 
   return <>
+    <header className="report-header">
+      <div className="report-heading">
+        <p className="report-eyebrow">Your property report</p>
+        <div className="address-line">
+          <h2 id="property-address">{displayAddress(property.officialAddress)}</h2>
+          <button className="icon-button" type="button" aria-label="Copy address" title="Copy address" onClick={() => void copy(property.recordAddressDiffers ? property.officialAddress : property.searchedAddress, "Address")}><Copy size={17} aria-hidden="true" /></button>
+        </div>
+        <div className="report-meta">
+          <span>{property.county === "North Carolina" ? "North Carolina" : `${property.county} County`}</span>
+          {parcel && <><span className="meta-dot" aria-hidden="true">&bull;</span><span>Parcel {parcel}</span>
+            <button className="icon-button" type="button" aria-label="Copy parcel number" title="Copy parcel number" onClick={() => void copy(parcel, "Parcel number")}><Copy size={16} aria-hidden="true" /></button></>}
+          <span className={property.hasCountyRecord ? "verified-badge" : "limited-badge"}>{property.hasCountyRecord ? <CheckCircle2 size={15} aria-hidden="true" /> : <AlertTriangle size={15} aria-hidden="true" />}
+            {property.matchMethod === "parcel-point" ? "Parcel matched by location" : property.hasCountyRecord ? "County record matched" : "Address located; limited records"}
+          </span>
+        </div>
+      </div>
+      <div className="report-header-actions">
+        <button id="change-address" type="button" onClick={onChangeAddress} disabled={editing}><Pencil size={17} aria-hidden="true" />Change address</button>
+        <button type="button" onClick={() => window.print()}><Printer size={17} aria-hidden="true" />Print / PDF</button>
+        <button type="button" onClick={() => void share()} disabled={sharing}><Share2 size={17} aria-hidden="true" />Share</button>
+      </div>
+    </header>
+    <p className="report-status" role="status" aria-live="polite">{status}</p>
+    {copyFallback && <label className="copy-fallback">{copyFallback.label}<input readOnly value={copyFallback.value} onFocus={(event) => event.target.select()} /></label>}
+
     <nav className="result-nav" aria-label="Property report sections">
       <div className="result-nav-links">{sections.map((section) => <a key={section.id} href={`#${section.id}`} aria-current={activeSection === section.id ? "location" : undefined}>{section.label}</a>)}</div>
       <label className="mobile-section-select">Section<select aria-label="Report section" value={activeSection} onChange={(event) => jumpTo(event.target.value)}>{sections.map((section) => <option key={section.id} value={section.id}>{section.label}</option>)}</select></label>
-      <button id="change-address" type="button" onClick={onChangeAddress} disabled={editing}><Search size={17} />Change address</button>
     </nav>
     {editor}
     {response.results.length > 1 && <fieldset className="result-picker" disabled={editing}>
@@ -157,38 +193,32 @@ export function PropertyReport({ property, response, selectedIndex, onSelect, on
     </fieldset>}
 
     <section id="property-overview" className="property-summary" aria-labelledby="property-address">
-      <div className="summary-heading"><p className="eyebrow">Your property</p><h2 id="property-address">{property.officialAddress}</h2>
-        <div className="badges"><span>{property.county === "North Carolina" ? "North Carolina" : `${property.county} County`}</span>{parcel && <span>Parcel {parcel}</span>}
-          <span className={property.hasCountyRecord ? "verified-badge" : "limited-badge"}>{property.hasCountyRecord ? <CheckCircle2 size={15} /> : <AlertTriangle size={15} />}
-            {property.matchMethod === "parcel-point" ? "Parcel matched by location" : property.hasCountyRecord ? "County record matched" : "Address located; limited records"}
-          </span>
-        </div>
-      </div>
       {property.recordAddressDiffers && <div className="notice address-notice"><MapPin size={21} /><div><strong>The county uses a different property address.</strong><span>You searched {property.searchedAddress}. This is the parcel returned for that location. Confirm the address and boundary before relying on this record.</span></div></div>}
-      {!property.hasCountyRecord ? <div className="notice limited-record-notice"><AlertTriangle size={21} /><div><strong>Address found. Automatic parcel details are unavailable.</strong><span>{response.note || "Use the county search and statewide resources below. No property facts have been assumed."}</span></div></div>
-        : facts.length ? <><dl className={`fact-grid fact-grid--${Math.min(facts.length, 4)}`}>{facts.map((fact) => <div key={fact.label}><dt>{fact.label}</dt><dd>{fact.value}</dd></div>)}</dl>
-          <p className="fact-source-note">County details.{facts.length < 8 ? " See the property card for more." : " Verify with the original source."}{property.totalValue != null ? " Tax value is not rebuild cost." : ""}</p></>
-          : <div className="notice limited-record-notice"><FileSearch size={21} /><div><strong>Parcel matched; building details were not supplied.</strong><span>Check the available property card or county website for further details.</span></div></div>}
+      <div className={`overview-grid${hasMap ? "" : " overview-grid--single"}`}>
+        <div className="glance-card">
+          <h3>Property at a glance</h3>
+          {!property.hasCountyRecord ? <div className="notice limited-record-notice"><AlertTriangle size={21} /><div><strong>Address found. Automatic parcel details are unavailable.</strong><span>{response.note || "Use the county search and statewide resources below. No property facts have been assumed."}</span></div></div>
+            : facts.length ? <><dl className={`fact-grid fact-grid--${factColumns}`}>{facts.map(({ icon: Icon, ...fact }) => <div key={fact.label}><dt><Icon size={30} strokeWidth={1.6} aria-hidden="true" />{fact.label}</dt><dd>{fact.value}</dd></div>)}</dl>
+              <p className="fact-source-note">County record details.{facts.length < 8 ? " See the property card for more." : " Verify with the original source."}{property.totalValue != null ? " Tax value is not rebuild cost." : ""}</p></>
+              : <div className="notice limited-record-notice"><FileSearch size={21} /><div><strong>Parcel matched; building details were not supplied.</strong><span>Check the available property card or county website for further details.</span></div></div>}
+        </div>
+        <ParcelMap property={property} />
+      </div>
 
       <div id="home-links" className="home-links-section">
-        <h3>Property shortcuts</h3>
+        <h3>Explore this property</h3>
         <div className="home-links-grid">{shortcuts.map(({ icon: Icon, ...link }) => <a key={link.label} href={link.href} target="_blank" rel="noopener noreferrer">
-          <Icon size={21} aria-hidden="true" /><span><strong>{link.label}</strong><small>{link.kind === "record" ? "Property link" : link.kind === "search" ? "Address search" : link.source === "Official" ? "County website" : "General website"}</small></span><ExternalLink size={15} aria-hidden="true" /><span className="sr-only">Opens in a new tab</span>
+          <Icon size={32} strokeWidth={1.6} aria-hidden="true" /><span><strong>{link.label}</strong><small>{link.hint}</small></span><ChevronRight size={18} aria-hidden="true" /><span className="sr-only">Opens in a new tab</span>
         </a>)}</div>
       </div>
-      <div className="report-tools">
-        <div className="report-actions"><button type="button" onClick={() => window.print()}><Printer size={18} />Print / PDF</button><button type="button" onClick={() => void share()} disabled={sharing}><Share2 size={18} />Share report</button></div>
-        <a className="review-link" href={quoteHref}>Request an insurance review <ArrowRight size={17} /></a>
-      </div>
-      <div className="copy-tools" aria-label="Property details to copy">
-        <button type="button" onClick={() => void copy(property.recordAddressDiffers ? property.officialAddress : property.searchedAddress, "Address")}><Copy size={16} />Copy address</button>
-        {parcel && <button type="button" onClick={() => void copy(parcel, "Parcel number")}><Copy size={16} />Copy parcel number</button>}
-      </div>
-      <p className="report-status" role="status" aria-live="polite">{status}</p>
-      {copyFallback && <label className="copy-fallback">{copyFallback.label}<input readOnly value={copyFallback.value} onFocus={(event) => event.target.select()} /></label>}
+
+      <aside className="cta-band" aria-label="Insurance review">
+        <Shield size={44} strokeWidth={1.7} aria-hidden="true" />
+        <div><h3>Know your home. Understand your coverage.</h3><p>Let our local team help review your home insurance.</p></div>
+        <a href={quoteHref}>Request an insurance review <ArrowRight size={18} aria-hidden="true" /></a>
+      </aside>
     </section>
 
-    <ParcelMap property={property} />
     <ResourceGroup id="records" eyebrow="County records" title="Assessments, parcel maps & deeds" links={resources.records} />
     {manualSearch && <aside className="manual-search"><AlertTriangle size={19} /><p>Some county sites require the address or parcel number for a manual search. A matched record does not guarantee a direct GIS link.</p></aside>}
     <ResourceGroup id="photos-maps" eyebrow="Photos & maps" title="See the home and nearby roads" links={resources.photos} />

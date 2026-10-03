@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { ExternalLink, MapPinned } from "lucide-react";
+import { ArrowUpRight, MapPinned } from "lucide-react";
 import type { PublicProperty } from "../shared/property";
 import { destinationKind } from "./lib/report";
 
@@ -52,19 +52,18 @@ export function ParcelMap({ property }: { property: PublicProperty }) {
 
   return (
     <section id="parcel-map" className="parcel-map-section" aria-labelledby="parcel-map-title">
-      <div className="parcel-map-heading">
-        <div>
-          <p className="eyebrow">Verified parcel location</p>
-          <h3 id="parcel-map-title">See the matched parcel boundary</h3>
-          <span><MapPinned size={15} />Boundary supplied by the county parcel service</span>
-        </div>
+      <div className="parcel-map-frame">
+        <span className="parcel-map-chip"><MapPinned size={14} aria-hidden="true" />County parcel boundary</span>
+        <div className="parcel-map" ref={containerRef} aria-label={`Highlighted parcel map for ${property.officialAddress}`} />
+      </div>
+      <div className="parcel-map-footer">
+        <h3 id="parcel-map-title">Parcel map</h3>
         {property.links.gisParcel || property.links.gis ? (
           <a href={property.links.gisParcel || property.links.gis} target="_blank" rel="noopener noreferrer">
-            {destinationKind(property.links.gisParcel || property.links.gis, property) === "record" ? "Open parcel record" : "Open county GIS"} <ExternalLink size={16} />
+            {destinationKind(property.links.gisParcel || property.links.gis, property) === "record" ? "Open parcel record" : "Open GIS map"} <ArrowUpRight size={16} aria-hidden="true" /><span className="sr-only">Opens in a new tab</span>
           </a>
         ) : null}
       </div>
-      <div className="parcel-map" ref={containerRef} aria-label={`Highlighted parcel map for ${property.officialAddress}`} />
       <p className="parcel-map-note">Parcel lines are for reference only and are not a survey or legal boundary determination.</p>
     </section>
   );

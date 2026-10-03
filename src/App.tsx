@@ -175,9 +175,10 @@ function HomeSearchPage() {
       <header className="site-header">
         <a className="brand" href="https://www.billlayneinsurance.com/" aria-label="Bill Layne Insurance home">
           <span className="brand-mark"><Home size={20} aria-hidden="true" /></span>
-          <span><strong>Bill Layne Insurance</strong><small>Find My Home Information</small></span>
+          <span><strong>Find My Home</strong><small>by Bill Layne Insurance</small></span>
         </a>
         <div className="header-actions">
+          {activeProperty && <span className="header-tag">Free property report</span>}
           <a href="tel:3368351993" aria-label="Call Bill Layne Insurance at 336-835-1993"><Phone size={16} />336-835-1993</a>
           <a href="mailto:save@billlayneinsurance.com"><Mail size={16} />Email Agency</a>
         </div>
@@ -206,7 +207,7 @@ function HomeSearchPage() {
 
         {activeProperty && response ? (
           <div className="results" ref={resultsRef} tabIndex={-1} aria-label="Property report">
-            <h1 className="report-title">Find My Home Information <span>Free property report</span></h1>
+            <h1 className="sr-only">Find My Home Information <span>Free property report</span></h1>
             <PropertyReport key={`${activeProperty.id}-${response.generatedAt}`} property={activeProperty} response={response} selectedIndex={selectedIndex}
               onSelect={setSelectedIndex} onChangeAddress={changeAddress} quoteHref={quoteUrl.toString()} editing={editing}
               editor={editing ? <div className="address-editor">
