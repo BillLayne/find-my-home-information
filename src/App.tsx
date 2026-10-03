@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent, type RefObject } from "react";
-import { Camera, CheckCircle2, FileSearch, FileText, Home, LoaderCircle, Mail, Map, MapPin, Phone, Search, ShieldCheck, Waves } from "lucide-react";
+import { Camera, CheckCircle2, FileText, Home, LoaderCircle, Mail, Map, MapPin, Phone, Search, ShieldCheck, Waves } from "lucide-react";
 import type { PublicPropertyResponse } from "../shared/property";
 import { findCountyCoverage, findProperty } from "./lib/api";
 import { validateAddress } from "./lib/report";
@@ -7,10 +7,10 @@ import { LegalPage } from "./LegalPage";
 import { PropertyReport } from "./PropertyReport";
 
 const FEATURES = [
-  { image: "property-photos-maps.webp", alt: "Illustrative aerial view of a home and parcel boundary", icon: Camera, title: "Photos and aerial maps", text: "Street View, county imagery, and available home photos." },
-  { image: "property-hazard-resources.webp", alt: "Tablet displaying an illustrative flood map", icon: Waves, title: "Flood and hazard resources", text: "Official FEMA and North Carolina mapping resources." },
-  { image: "property-county-records.webp", alt: "Sample assessment, deed, and parcel documents", icon: FileSearch, title: "County public records", text: "Available property cards, assessments, parcel maps, and deed searches." },
-  { image: "property-home-inventory.webp", alt: "Homeowner photographing a living room for an inventory", icon: FileText, title: "Home inventory resources", text: "Belongings inventories and worksheets for before or after a loss." },
+  { icon: FileText, title: "Property records", text: "View available property details." },
+  { icon: Map, title: "Maps & aerial views", text: "Explore maps and imagery." },
+  { icon: Waves, title: "Flood resources", text: "Access FEMA and North Carolina links." },
+  { icon: Camera, title: "Home inventory", text: "Prepare before or after a loss." },
 ];
 
 function scrollBehavior(): ScrollBehavior {
@@ -23,12 +23,12 @@ function AddressSearch({ id, address, onChange, onSubmit, loading, error, inputR
 }) {
   return (
     <form id={id} className="search-form" onSubmit={onSubmit} noValidate>
-      <label className="search-label" htmlFor={`${id}-address`}>Street address, city and ZIP code</label>
+      <label className="search-label" htmlFor={`${id}-address`}>Enter your North Carolina address</label>
       <div className="search-fields">
         <div className="search-input-wrap">
           <MapPin size={20} aria-hidden="true" />
           <input id={`${id}-address`} ref={inputRef} value={address} onChange={(event) => onChange(event.target.value)}
-            placeholder="123 Main St, Elkin, NC 28621" autoComplete="street-address" type="search" readOnly={loading}
+            placeholder="Street address, city, ZIP code" autoComplete="street-address" type="search" readOnly={loading}
             aria-invalid={Boolean(error)} aria-describedby={`${id}-hint${error ? ` ${id}-error` : ""}`} />
         </div>
         <button type="submit" disabled={loading}>
@@ -36,7 +36,7 @@ function AddressSearch({ id, address, onChange, onSubmit, loading, error, inputR
           {loading ? "Finding records" : "Find my home"}
         </button>
       </div>
-      <p id={`${id}-hint`} className="search-hint">North Carolina addresses. Available details vary by county.</p>
+      <p id={`${id}-hint`} className="search-hint">Available details vary by county.</p>
       {error && <p id={`${id}-error`} className="search-error" role="alert">{error}</p>}
       <div className="search-feedback">
         <span role="status">{loading ? "Searching public property records..." : ""}</span>
@@ -175,7 +175,7 @@ function HomeSearchPage() {
       <header className="site-header">
         <a className="brand" href="https://www.billlayneinsurance.com/" aria-label="Bill Layne Insurance home">
           <span className="brand-mark"><Home size={20} aria-hidden="true" /></span>
-          <span><strong>Find My Home</strong><small>by Bill Layne Insurance</small></span>
+          {activeProperty ? <span><strong>Find My Home</strong><small>by Bill Layne Insurance</small></span> : <span><strong>Bill Layne Insurance</strong><small>Find My Home Information</small></span>}
         </a>
         <div className="header-actions">
           {activeProperty && <span className="header-tag">Free property report</span>}
@@ -189,19 +189,19 @@ function HomeSearchPage() {
             <div className="hero-image" aria-hidden="true" /><div className="hero-overlay" aria-hidden="true" />
             <div className="hero-content">
               <p className="hero-kicker"><MapPin size={16} />Free North Carolina property resource</p>
-              <h1>Find Your North Carolina <span>Home Information</span></h1>
-              <p className="hero-lead">Property records, photos, maps, and flood resources. Start with your address.</p>
+              <h1>Your home. <span>The details that matter.</span></h1>
+              <p className="hero-lead">Find property records, photos, maps, and flood resources, all starting with your address.</p>
               <AddressSearch id="property-search" address={address} onChange={setAddress} onSubmit={handleSubmit} loading={loading} error={error} inputRef={searchInputRef} />
               <div className="trust-row">
-                <span><CheckCircle2 size={16} />No account required</span>
-                <span><CheckCircle2 size={16} />No saved search history</span>
+                <span><CheckCircle2 size={20} />No account required</span>
+                <span><CheckCircle2 size={20} />No saved search history</span>
               </div>
             </div>
           </section>
           <section className="scope-band" aria-label="Available coverage">
-            <div><Map size={23} /><span><strong>{coverageCount} integrated counties</strong><small>Automatic details where available</small></span></div>
-            <div><ShieldCheck size={23} /><span><strong>Statewide hazard resources</strong><small>FEMA and North Carolina links</small></span></div>
-            <div><CheckCircle2 size={23} /><span><strong>Public information only</strong><small>No private agency records</small></span></div>
+            <div><Map size={38} strokeWidth={1.6} /><span><strong>{coverageCount} integrated counties</strong><small>Automatic details where available</small></span></div>
+            <div><ShieldCheck size={38} strokeWidth={1.6} /><span><strong>Statewide hazard resources</strong><small>FEMA and North Carolina links</small></span></div>
+            <div><CheckCircle2 size={38} strokeWidth={1.6} /><span><strong>Public information only</strong><small>No private agency records</small></span></div>
           </section>
         </>}
 
@@ -218,11 +218,11 @@ function HomeSearchPage() {
           </div>
         ) : (
           <section className="pre-search">
-            <div className="section-heading"><p>Available public resources</p><h2>Your home, from more than one angle.</h2></div>
+            <h2 className="pre-search-title">A clearer picture of your property</h2>
             <div className="pre-search-grid">
-              {FEATURES.map(({ image, alt, icon: Icon, title, text }) => <article className="feature-card" key={image}>
-                <img src={`/assets/${image}`} alt={alt} width="1200" height="800" loading="lazy" />
-                <div className="feature-card-body"><h3><Icon size={20} aria-hidden="true" />{title}</h3><p>{text}</p></div>
+              {FEATURES.map(({ icon: Icon, title, text }) => <article className="feature-card" key={title}>
+                <Icon size={36} strokeWidth={1.6} aria-hidden="true" />
+                <div><h3>{title}</h3><p>{text}</p></div>
               </article>)}
             </div>
           </section>
