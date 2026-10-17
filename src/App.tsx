@@ -3,6 +3,7 @@ import {
   ArrowRight,
   ChevronRight,
   Droplets,
+  ExternalLink,
   FileText,
   Home,
   LoaderCircle,
@@ -12,7 +13,8 @@ import {
   PackageCheck,
   Phone,
   Search,
-  User,
+  ShieldCheck,
+  Sparkles,
 } from "lucide-react";
 import type { PublicPropertyResponse } from "../shared/property";
 import { findCountyCoverage, findProperty } from "./lib/api";
@@ -20,6 +22,7 @@ import { validateAddress } from "./lib/report";
 import { LegalPage } from "./LegalPage";
 import { PropertyReport } from "./PropertyReport";
 
+const IMG_AGENCY_LOGO = "/agency-logo.png";
 const IMG_DESKTOP_HERO = "https://img.billlayneinsurance.com/i/2026/10/desktop-hero-ujbrhm.webp";
 const IMG_MOBILE_HERO = "https://img.billlayneinsurance.com/i/2026/10/mobile-hero-4tkayf.webp";
 const IMG_PROPERTY_PREVIEW = "https://img.billlayneinsurance.com/i/2026/10/property-preview-p68nus.webp";
@@ -27,6 +30,8 @@ const IMG_AERIAL_MAP = "https://img.billlayneinsurance.com/i/2026/10/aerial-map-
 const IMG_FLOOD_RESOURCES = "https://img.billlayneinsurance.com/i/2026/10/flood-resources-zzdcxg.webp";
 const IMG_HOME_INVENTORY = "https://img.billlayneinsurance.com/i/2026/10/home-inventory-q8z447.webp";
 const IMG_MOUNTAIN_CONTACT = "https://img.billlayneinsurance.com/i/2026/09/bill-layne-agency-hero-background-xh5eb5.webp";
+
+const SAMPLE_DEMO_ADDRESS = "1283 N Bridge St, Elkin, NC 28621";
 
 type ResourceCardItem = {
   title: string;
@@ -125,6 +130,7 @@ function AddressSearch({
   inputRef,
   onCancel,
   showPublicNote = false,
+  highlighted = false,
 }: {
   id: string;
   address: string;
@@ -135,9 +141,15 @@ function AddressSearch({
   inputRef: RefObject<HTMLInputElement | null>;
   onCancel?: () => void;
   showPublicNote?: boolean;
+  highlighted?: boolean;
 }) {
   return (
-    <form id={id} className="search-form" onSubmit={onSubmit} noValidate>
+    <form
+      id={id}
+      className={`search-form${highlighted ? " is-highlighted" : ""}`}
+      onSubmit={onSubmit}
+      noValidate
+    >
       <label className="search-label" htmlFor={`${id}-address`}>
         Enter your North Carolina address
       </label>
@@ -206,7 +218,9 @@ function HomeSearchPage() {
   const [error, setError] = useState("");
   const [coverageCount, setCoverageCount] = useState(53);
   const [editing, setEditing] = useState(false);
+  const [heroTab, setHeroTab] = useState<"records" | "maps" | "resources">("records");
   const [previewTab, setPreviewTab] = useState<"records" | "maps" | "resources">("records");
+  const [searchHighlight, setSearchHighlight] = useState(false);
   const resultsRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const editorInputRef = useRef<HTMLInputElement>(null);
@@ -267,8 +281,29 @@ function HomeSearchPage() {
   }
 
   function focusSearchInput() {
-    searchInputRef.current?.scrollIntoView({ behavior: scrollBehavior(), block: "center" });
-    searchInputRef.current?.focus({ preventScroll: true });
+    const clean = address.replace(/\s+/g, " ").trim();
+    if (clean && !validateAddress(clean)) {
+      void runSearch(clean);
+      return;
+    }
+    const formEl = document.getElementById("property-search");
+    if (formEl) {
+      formEl.scrollIntoView({ behavior: scrollBehavior(), block: "center" });
+    } else {
+      window.scrollTo({ top: 0, behavior: scrollBehavior() });
+    }
+    setSearchHighlight(true);
+    window.setTimeout(() => {
+      searchInputRef.current?.focus({ preventScroll: true });
+    }, 320);
+    window.setTimeout(() => {
+      setSearchHighlight(false);
+    }, 1800);
+  }
+
+  function runSampleLookup() {
+    setAddress(SAMPLE_DEMO_ADDRESS);
+    void runSearch(SAMPLE_DEMO_ADDRESS);
   }
 
   function changeAddress() {
@@ -372,11 +407,14 @@ function HomeSearchPage() {
             href="https://www.billlayneinsurance.com/"
             aria-label="Bill Layne Insurance home"
           >
-            <span className="brand-monogram" aria-hidden="true">
-              <span className="monogram-b">B</span>
-              <span className="monogram-l">L</span>
-            </span>
-            <span className="brand-title">Bill Layne Insurance</span>
+            <img
+              className="brand-logo-img"
+              src={IMG_AGENCY_LOGO}
+              alt="Bill Layne Insurance Agency"
+              width={164}
+              height={50}
+              fetchPriority="high"
+            />
             <span className="brand-divider" aria-hidden="true" />
             <span className="brand-sub">Find My Home</span>
           </a>
@@ -437,6 +475,7 @@ function HomeSearchPage() {
                     error={error}
                     inputRef={searchInputRef}
                     showPublicNote
+                    highlighted={searchHighlight}
                   />
                 </div>
 
@@ -451,24 +490,46 @@ function HomeSearchPage() {
                     />
                   </div>
                   <h2 className="hero-preview-title">Your property, connected.</h2>
-                  <div className="hero-preview-pills">
-                    <span>
+                  <div className="hero-preview-pills" role="tablist" aria-label="Preview categories">
+                    <button
+                      type="button"
+                      role="tab"
+                      aria-selected={heroTab === "records"}
+                      className={heroTab === "records" ? "is-active" : ""}
+                      onClick={() => setHeroTab("records")}
+                    >
                       <FileText size={15} strokeWidth={1.8} aria-hidden="true" />
                       Records
-                    </span>
-                    <span>
+                    </button>
+                    <button
+                      type="button"
+                      role="tab"
+                      aria-selected={heroTab === "maps"}
+                      className={heroTab === "maps" ? "is-active" : ""}
+                      onClick={() => setHeroTab("maps")}
+                    >
                       <Map size={15} strokeWidth={1.8} aria-hidden="true" />
                       Maps
-                    </span>
-                    <span>
+                    </button>
+                    <button
+                      type="button"
+                      role="tab"
+                      aria-selected={heroTab === "resources"}
+                      className={heroTab === "resources" ? "is-active" : ""}
+                      onClick={() => setHeroTab("resources")}
+                    >
                       <Droplets size={15} strokeWidth={1.8} aria-hidden="true" />
                       Resources
-                    </span>
+                    </button>
                   </div>
                   <div className="hero-preview-map-wrap">
                     <img
-                      src={IMG_AERIAL_MAP}
-                      alt="Example neighborhood aerial map"
+                      src={heroTab === "resources" ? IMG_FLOOD_RESOURCES : IMG_AERIAL_MAP}
+                      alt={
+                        heroTab === "resources"
+                          ? "Example flood zone mapping preview"
+                          : "Example neighborhood aerial map"
+                      }
                       loading="lazy"
                       decoding="async"
                     />
@@ -482,9 +543,9 @@ function HomeSearchPage() {
                       <span>Property details</span>
                       <ChevronRight size={15} aria-hidden="true" />
                     </button>
-                    <button type="button" onClick={focusSearchInput}>
-                      <Map size={15} strokeWidth={1.8} aria-hidden="true" />
-                      <span>County records</span>
+                    <button type="button" onClick={runSampleLookup}>
+                      <Sparkles size={15} strokeWidth={1.8} aria-hidden="true" />
+                      <span>Try sample lookup</span>
                       <ChevronRight size={15} aria-hidden="true" />
                     </button>
                   </div>
@@ -495,18 +556,32 @@ function HomeSearchPage() {
             {/* QUICK FEATURE STRIP */}
             <section className="feature-strip" aria-label="Available property resources">
               <div className="feature-strip-inner">
-                <div className="feature-strip-item">
+                <button type="button" className="feature-strip-item" onClick={focusSearchInput}>
                   <FileText size={22} strokeWidth={1.75} aria-hidden="true" />
                   <span>Property records ({coverageCount} integrated counties)</span>
-                </div>
-                <div className="feature-strip-item">
+                </button>
+                <button
+                  type="button"
+                  className="feature-strip-item"
+                  onClick={() => {
+                    setPreviewTab("maps");
+                    document
+                      .getElementById("example-preview-section")
+                      ?.scrollIntoView({ behavior: scrollBehavior(), block: "center" });
+                  }}
+                >
                   <Map size={22} strokeWidth={1.75} aria-hidden="true" />
                   <span>Maps &amp; aerial views</span>
-                </div>
-                <div className="feature-strip-item">
+                </button>
+                <a
+                  className="feature-strip-item"
+                  href="https://fris.nc.gov/fris/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   <Droplets size={22} strokeWidth={1.75} aria-hidden="true" />
                   <span>Flood resources</span>
-                </div>
+                </a>
               </div>
             </section>
 
@@ -584,10 +659,24 @@ function HomeSearchPage() {
             </section>
 
             {/* 6. PROPERTY-PREVIEW SECTION (WHITE BACKGROUND, TWO COLUMNS) */}
-            <section className="preview-showcase-section" aria-labelledby="clearer-picture-heading">
+            <section
+              id="example-preview-section"
+              className="preview-showcase-section"
+              aria-labelledby="clearer-picture-heading"
+            >
               <div className="section-container preview-showcase-grid">
                 <div className="sample-preview-card" aria-label="Example preview illustration">
-                  <p className="sample-preview-label">EXAMPLE PREVIEW</p>
+                  <div className="sample-preview-top-bar">
+                    <p className="sample-preview-label">EXAMPLE PREVIEW</p>
+                    <button
+                      type="button"
+                      className="sample-try-link"
+                      onClick={runSampleLookup}
+                    >
+                      <Sparkles size={14} aria-hidden="true" />
+                      Try live sample address
+                    </button>
+                  </div>
                   <div className="sample-preview-hero-img">
                     <img
                       src={IMG_PROPERTY_PREVIEW}
@@ -596,7 +685,11 @@ function HomeSearchPage() {
                       decoding="async"
                     />
                   </div>
-                  <div className="sample-preview-tabs" role="tablist" aria-label="Sample preview sections">
+                  <div
+                    className="sample-preview-tabs"
+                    role="tablist"
+                    aria-label="Sample preview sections"
+                  >
                     <button
                       type="button"
                       role="tab"
@@ -625,41 +718,163 @@ function HomeSearchPage() {
                       Resources
                     </button>
                   </div>
-                  <div className="sample-preview-columns">
-                    <div className="sample-details-col">
-                      <h4>Property details</h4>
-                      <ul className="sample-skeleton-list" aria-label="Illustrative property fields">
-                        <li>
-                          <Home size={16} strokeWidth={1.75} aria-hidden="true" />
-                          <span className="skeleton-bar w-80" />
-                        </li>
-                        <li>
-                          <User size={16} strokeWidth={1.75} aria-hidden="true" />
-                          <span className="skeleton-bar w-65" />
-                        </li>
-                        <li>
-                          <MapPin size={16} strokeWidth={1.75} aria-hidden="true" />
-                          <span className="skeleton-bar w-90" />
-                        </li>
-                        <li>
-                          <FileText size={16} strokeWidth={1.75} aria-hidden="true" />
-                          <span className="skeleton-bar w-70" />
-                        </li>
-                      </ul>
-                    </div>
-                    <div className="sample-map-col">
-                      <h4>County resources</h4>
-                      <div className="sample-Supporting-map">
-                        <img
-                          src={IMG_AERIAL_MAP}
-                          alt="Supporting aerial parcel view"
-                          loading="lazy"
-                          decoding="async"
-                        />
-                        <span className="sample-parcel-box" aria-hidden="true" />
+
+                  {previewTab === "records" && (
+                    <div className="sample-preview-columns" role="tabpanel">
+                      <div className="sample-details-col">
+                        <h4>Property details</h4>
+                        <ul className="sample-interactive-list">
+                          <li>
+                            <button type="button" onClick={focusSearchInput}>
+                              <Home size={16} strokeWidth={1.75} aria-hidden="true" />
+                              <span>Year built, heated area &amp; stories</span>
+                              <ChevronRight size={14} aria-hidden="true" />
+                            </button>
+                          </li>
+                          <li>
+                            <button type="button" onClick={focusSearchInput}>
+                              <FileText size={16} strokeWidth={1.75} aria-hidden="true" />
+                              <span>County tax card &amp; assessed value</span>
+                              <ChevronRight size={14} aria-hidden="true" />
+                            </button>
+                          </li>
+                          <li>
+                            <button type="button" onClick={focusSearchInput}>
+                              <MapPin size={16} strokeWidth={1.75} aria-hidden="true" />
+                              <span>Parcel ID / PIN &amp; deed lookup</span>
+                              <ChevronRight size={14} aria-hidden="true" />
+                            </button>
+                          </li>
+                        </ul>
+                      </div>
+                      <div className="sample-map-col">
+                        <h4>County resources</h4>
+                        <button
+                          type="button"
+                          className="sample-Supporting-map"
+                          onClick={focusSearchInput}
+                          aria-label="Enter your address to view county parcel map"
+                        >
+                          <img
+                            src={IMG_AERIAL_MAP}
+                            alt="Supporting aerial parcel view"
+                            loading="lazy"
+                            decoding="async"
+                          />
+                          <span className="sample-parcel-box" aria-hidden="true" />
+                          <span className="sample-map-cta">Search your parcel &rarr;</span>
+                        </button>
                       </div>
                     </div>
-                  </div>
+                  )}
+
+                  {previewTab === "maps" && (
+                    <div className="sample-preview-columns" role="tabpanel">
+                      <div className="sample-details-col">
+                        <h4>Maps &amp; aerial views</h4>
+                        <ul className="sample-interactive-list">
+                          <li>
+                            <button type="button" onClick={focusSearchInput}>
+                              <Map size={16} strokeWidth={1.75} aria-hidden="true" />
+                              <span>Interactive parcel boundary map</span>
+                              <ChevronRight size={14} aria-hidden="true" />
+                            </button>
+                          </li>
+                          <li>
+                            <button type="button" onClick={focusSearchInput}>
+                              <MapPin size={16} strokeWidth={1.75} aria-hidden="true" />
+                              <span>County GIS &amp; aerial photography</span>
+                              <ChevronRight size={14} aria-hidden="true" />
+                            </button>
+                          </li>
+                          <li>
+                            <button type="button" onClick={focusSearchInput}>
+                              <Search size={16} strokeWidth={1.75} aria-hidden="true" />
+                              <span>Google Maps &amp; Street View links</span>
+                              <ChevronRight size={14} aria-hidden="true" />
+                            </button>
+                          </li>
+                        </ul>
+                      </div>
+                      <div className="sample-map-col">
+                        <h4>Aerial neighborhood view</h4>
+                        <button
+                          type="button"
+                          className="sample-Supporting-map"
+                          onClick={focusSearchInput}
+                          aria-label="Enter your address to explore aerial views"
+                        >
+                          <img
+                            src={IMG_AERIAL_MAP}
+                            alt="Aerial neighborhood view"
+                            loading="lazy"
+                            decoding="async"
+                          />
+                          <span className="sample-map-cta">Explore your map &rarr;</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {previewTab === "resources" && (
+                    <div className="sample-preview-columns" role="tabpanel">
+                      <div className="sample-details-col">
+                        <h4>Flood &amp; home tools</h4>
+                        <ul className="sample-interactive-list">
+                          <li>
+                            <a
+                              href="https://fris.nc.gov/fris/"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              <Droplets size={16} strokeWidth={1.75} aria-hidden="true" />
+                              <span>NC Flood Risk Info System (FRIS)</span>
+                              <ExternalLink size={14} aria-hidden="true" />
+                            </a>
+                          </li>
+                          <li>
+                            <a
+                              href="https://msc.fema.gov/portal/search"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              <ShieldCheck size={16} strokeWidth={1.75} aria-hidden="true" />
+                              <span>Official FEMA Flood Map Center</span>
+                              <ExternalLink size={14} aria-hidden="true" />
+                            </a>
+                          </li>
+                          <li>
+                            <a
+                              href="https://billlayne.github.io/HOME-INVENTORY/"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              <Home size={16} strokeWidth={1.75} aria-hidden="true" />
+                              <span>Home Inventory Checklist Tool</span>
+                              <ExternalLink size={14} aria-hidden="true" />
+                            </a>
+                          </li>
+                        </ul>
+                      </div>
+                      <div className="sample-map-col">
+                        <h4>Statewide flood map</h4>
+                        <a
+                          className="sample-Supporting-map"
+                          href="https://fris.nc.gov/fris/"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <img
+                            src={IMG_FLOOD_RESOURCES}
+                            alt="Flood map resource illustration"
+                            loading="lazy"
+                            decoding="async"
+                          />
+                          <span className="sample-map-cta">Open NC Flood Map &rarr;</span>
+                        </a>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div className="preview-showcase-copy">
@@ -680,9 +895,15 @@ function HomeSearchPage() {
                       </li>
                     ))}
                   </ol>
-                  <button type="button" className="outlined-gold-btn" onClick={focusSearchInput}>
-                    Find My Home <ArrowRight size={17} strokeWidth={2} aria-hidden="true" />
-                  </button>
+                  <div className="preview-showcase-actions">
+                    <button type="button" className="outlined-gold-btn" onClick={focusSearchInput}>
+                      Find My Home <ArrowRight size={17} strokeWidth={2} aria-hidden="true" />
+                    </button>
+                    <button type="button" className="sample-demo-btn" onClick={runSampleLookup}>
+                      <Sparkles size={16} strokeWidth={2} aria-hidden="true" />
+                      See Sample Report
+                    </button>
+                  </div>
                 </div>
               </div>
             </section>
@@ -809,7 +1030,14 @@ function HomeSearchPage() {
       <footer className="site-footer">
         <div className="site-footer-inner">
           <div className="footer-brand-row">
-            <strong className="footer-agency-name">Bill Layne Insurance Agency</strong>
+            <img
+              className="footer-logo-img"
+              src={IMG_AGENCY_LOGO}
+              alt="Bill Layne Insurance Agency"
+              width={148}
+              height={45}
+              loading="lazy"
+            />
             <span className="footer-sep" aria-hidden="true">
               |
             </span>

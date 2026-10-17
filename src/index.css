@@ -115,41 +115,27 @@ main:focus, .results:focus { outline: none; }
   min-width: 0;
   display: inline-flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
   text-decoration: none;
 }
 
-.brand-monogram {
-  display: inline-flex;
-  align-items: baseline;
-  font-family: Georgia, "Times New Roman", serif;
-  font-weight: 800;
-  font-size: 27px;
-  line-height: 1;
-  letter-spacing: -0.06em;
-}
-
-.monogram-b { color: var(--navy); }
-.monogram-l { color: var(--gold); margin-left: -3px; }
-
-.brand-title {
-  color: var(--navy);
-  font-size: 20px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  white-space: nowrap;
+.brand-logo-img {
+  height: 48px;
+  width: auto;
+  display: block;
+  object-fit: contain;
 }
 
 .brand-divider {
   width: 1px;
-  height: 22px;
+  height: 24px;
   background: #CBD5E1;
 }
 
 .brand-sub {
   color: var(--muted);
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
   white-space: nowrap;
 }
 
@@ -291,6 +277,12 @@ main:focus, .results:focus { outline: none; }
   color: var(--navy);
   background: #FFFFFF;
   box-shadow: 0 20px 48px rgba(6, 21, 41, 0.32);
+  transition: box-shadow 0.25s ease, transform 0.25s ease;
+}
+
+.search-hero .search-form.is-highlighted {
+  box-shadow: 0 0 0 4px var(--gold), 0 24px 56px rgba(6, 21, 41, 0.45);
+  transform: translateY(-2px);
 }
 
 .search-label {
@@ -468,7 +460,7 @@ main:focus, .results:focus { outline: none; }
   gap: 8px;
 }
 
-.hero-preview-pills span {
+.hero-preview-pills button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -481,9 +473,17 @@ main:focus, .results:focus { outline: none; }
   color: var(--navy);
   font-size: 12.5px;
   font-weight: 600;
+  transition: border-color 0.15s ease, background 0.15s ease;
 }
 
-.hero-preview-pills span svg {
+.hero-preview-pills button.is-active,
+.hero-preview-pills button:hover {
+  border-color: var(--gold);
+  background: var(--cream);
+  font-weight: 700;
+}
+
+.hero-preview-pills button svg {
   color: var(--gold);
 }
 
@@ -566,10 +566,18 @@ main:focus, .results:focus { outline: none; }
   align-items: center;
   justify-content: center;
   gap: 12px;
-  padding: 4px 16px;
+  padding: 6px 16px;
+  border: 0;
+  background: transparent;
   color: var(--navy);
+  text-decoration: none;
   font-size: 15px;
   font-weight: 700;
+  transition: color 0.15s ease;
+}
+
+.feature-strip-item:hover {
+  color: var(--gold-hover);
 }
 
 .feature-strip-item + .feature-strip-item {
@@ -699,13 +707,47 @@ main:focus, .results:focus { outline: none; }
   box-shadow: var(--card-shadow);
 }
 
+.sample-preview-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
 .sample-preview-label {
-  margin: 0 0 12px;
+  margin: 0;
   color: #64748B;
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
+}
+
+.sample-try-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border: 1px solid var(--gold);
+  border-radius: 999px;
+  background: var(--cream);
+  color: var(--navy);
+  font-size: 12px;
+  font-weight: 700;
+  transition: background 0.15s ease;
+}
+
+.sample-try-link svg {
+  color: var(--gold);
+}
+
+.sample-try-link:hover {
+  background: var(--gold);
+}
+
+.sample-try-link:hover svg {
+  color: var(--navy);
 }
 
 .sample-preview-hero-img {
@@ -737,6 +779,11 @@ main:focus, .results:focus { outline: none; }
   color: var(--muted);
   font-size: 14px;
   font-weight: 600;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.sample-preview-tabs button:hover {
+  color: var(--navy);
 }
 
 .sample-preview-tabs button.is-active {
@@ -747,52 +794,69 @@ main:focus, .results:focus { outline: none; }
 
 .sample-preview-columns {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
+  grid-template-columns: 1.12fr 0.88fr;
+  gap: 18px;
   padding-top: 18px;
 }
 
 .sample-details-col h4,
 .sample-map-col h4 {
-  margin: 0 0 12px;
+  margin: 0 0 10px;
   color: var(--navy);
   font-size: 14px;
   font-weight: 800;
 }
 
-.sample-skeleton-list {
+.sample-interactive-list {
   list-style: none;
   margin: 0;
   padding: 0;
   display: grid;
-  gap: 12px;
+  gap: 8px;
 }
 
-.sample-skeleton-list li {
-  display: flex;
+.sample-interactive-list button,
+.sample-interactive-list a {
+  width: 100%;
+  min-height: 40px;
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr) 14px;
   align-items: center;
-  gap: 10px;
-  color: #64748B;
+  gap: 9px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #F8FAFC;
+  color: var(--navy);
+  text-align: left;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 600;
+  transition: border-color 0.15s ease, background 0.15s ease;
 }
 
-.skeleton-bar {
-  height: 12px;
-  border-radius: 6px;
-  background: #E2E8F0;
-  display: block;
+.sample-interactive-list button:hover,
+.sample-interactive-list a:hover {
+  border-color: var(--gold);
+  background: var(--cream);
 }
 
-.skeleton-bar.w-80 { width: 80%; }
-.skeleton-bar.w-65 { width: 65%; }
-.skeleton-bar.w-90 { width: 90%; }
-.skeleton-bar.w-70 { width: 70%; }
+.sample-interactive-list button svg:first-child,
+.sample-interactive-list a svg:first-child {
+  color: var(--gold-hover);
+}
 
 .sample-Supporting-map {
   position: relative;
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 1px solid var(--line);
   border-radius: 10px;
   overflow: hidden;
-  aspect-ratio: 16 / 10;
+  aspect-ratio: 16 / 11;
   background: #E2E8F0;
+  text-decoration: none;
 }
 
 .sample-Supporting-map img {
@@ -800,18 +864,35 @@ main:focus, .results:focus { outline: none; }
   height: 100%;
   object-fit: cover;
   display: block;
+  transition: transform 0.25s ease;
+}
+
+.sample-Supporting-map:hover img {
+  transform: scale(1.04);
 }
 
 .sample-parcel-box {
   position: absolute;
   left: 38%;
-  top: 28%;
+  top: 24%;
   width: 24%;
-  height: 44%;
+  height: 40%;
   border: 2px solid var(--gold);
   background: rgba(201, 162, 44, 0.22);
   transform: rotate(18deg);
   border-radius: 2px;
+}
+
+.sample-map-cta {
+  position: absolute;
+  inset: auto 8px 8px 8px;
+  padding: 5px 8px;
+  border-radius: 7px;
+  background: rgba(10, 31, 60, 0.88);
+  color: #FFFFFF;
+  font-size: 11.5px;
+  font-weight: 700;
+  text-align: center;
 }
 
 .preview-showcase-copy h2 {
@@ -866,6 +947,13 @@ main:focus, .results:focus { outline: none; }
   line-height: 1.55;
 }
 
+.preview-showcase-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
 .outlined-gold-btn {
   min-height: 50px;
   display: inline-flex;
@@ -885,6 +973,31 @@ main:focus, .results:focus { outline: none; }
 .outlined-gold-btn:hover {
   background: var(--gold);
   color: var(--navy);
+}
+
+.sample-demo-btn {
+  min-height: 50px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 22px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--cream);
+  color: var(--navy);
+  font-size: 15px;
+  font-weight: 700;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.sample-demo-btn svg {
+  color: var(--gold);
+}
+
+.sample-demo-btn:hover {
+  border-color: var(--gold);
+  background: #f3ecd8;
 }
 
 /* ==================== 7. HELPFUL GUIDANCE (CREAM) ==================== */
@@ -1154,12 +1267,11 @@ main:focus, .results:focus { outline: none; }
   font-size: 15px;
 }
 
-.footer-agency-name {
-  color: var(--navy);
-  font-size: 16px;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+.footer-logo-img {
+  height: 42px;
+  width: auto;
+  display: block;
+  object-fit: contain;
 }
 
 .footer-sep {
@@ -1410,9 +1522,8 @@ main:focus, .results:focus { outline: none; }
     padding: 0 20px;
     gap: 10px;
   }
-  .brand { gap: 8px; }
-  .brand-monogram { font-size: 22px; }
-  .brand-title { font-size: 16px; }
+  .brand { gap: 10px; }
+  .brand-logo-img { height: 40px; }
   .brand-divider, .brand-sub { display: none; }
   .header-contact-btn { display: none; }
   .header-phone {
@@ -1488,7 +1599,12 @@ main:focus, .results:focus { outline: none; }
   .sample-preview-columns {
     grid-template-columns: 1fr;
   }
-  .outlined-gold-btn {
+  .preview-showcase-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .outlined-gold-btn,
+  .sample-demo-btn {
     width: 100%;
   }
   .contact-panel-section {
