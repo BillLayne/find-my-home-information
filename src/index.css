@@ -1910,7 +1910,7 @@ main:focus, .results:focus { outline: none; }
 
   .overview-grid {
     display: grid !important;
-    grid-template-columns: 1.32fr 1fr !important;
+    grid-template-columns: minmax(0, 1.32fr) minmax(0, 1fr) !important;
     gap: 10px !important;
     align-items: stretch !important;
   }
