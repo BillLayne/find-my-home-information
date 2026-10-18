@@ -1329,7 +1329,7 @@ main:focus, .results:focus { outline: none; }
   max-width: 1200px;
   margin: 0 auto;
   padding: 32px 32px 64px;
-  scroll-margin-top: 8px;
+  scroll-margin-top: 90px;
 }
 
 .section-heading p,

@@ -258,7 +258,7 @@ function HomeSearchPage() {
       // Consume an incoming share link without keeping the address in browser history.
       window.history.replaceState(null, "", window.location.pathname);
       requestAnimationFrame(() => {
-        resultsRef.current?.scrollIntoView({ behavior: "instant", block: "start" });
+        window.scrollTo({ top: 0, behavior: "instant" });
         resultsRef.current?.focus({ preventScroll: true });
       });
     } catch (lookupError) {

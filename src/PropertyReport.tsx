@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { AlertTriangle, ArrowRight, Bath, BedDouble, Briefcase, Building2, CalendarDays, Camera, CheckCircle2, ChevronRight, Coins, Copy, ExternalLink, FileSearch, FileText, Flame, FolderSearch, Home, Info, LandPlot, Layers, MapPin, Pencil, Phone, Printer, Share2, Shield, ShieldCheck, Trees, Warehouse, Waves } from "lucide-react";
+import { AlertTriangle, ArrowRight, Bath, BedDouble, Briefcase, Building2, CalendarDays, Camera, CheckCircle2, ChevronRight, Coins, Copy, ExternalLink, FileSearch, FileText, FolderSearch, Home, Info, LandPlot, Layers, MapPin, Pencil, Phone, Printer, Share2, Shield, ShieldCheck, Trees, Warehouse, Waves } from "lucide-react";
 import type { PublicProperty, PublicPropertyResponse } from "../shared/property";
 import { destinationKind, destinationLabel, propertyShareUrl, type DestinationKind } from "./lib/report";
 import { ParcelMap } from "./ParcelMap";
@@ -218,7 +218,6 @@ export function PropertyReport({ property, response, selectedIndex, onSelect, on
     { ...resources.hazards[0], label: "FEMA flood map", hint: "Check mapped flood zones" },
   ].filter((link) => link.href);
   const parcel = property.parcelId || property.pin;
-  const manualSearch = resources.records.some((link) => link.href && link.kind === "website");
   const hasMap = Boolean(property.parcelRings?.length);
   const countyLabel = property.county === "North Carolina" ? "North Carolina" : `${property.county} County`;
 
@@ -566,13 +565,6 @@ export function PropertyReport({ property, response, selectedIndex, onSelect, on
         links={AGENCY_RESOURCES}
       />
     </div>
-
-    {manualSearch && (
-      <aside className="manual-search screen-only">
-        <AlertTriangle size={19} />
-        <p>Some county sites require the address or parcel number for a manual search. A matched record does not guarantee a direct GIS link.</p>
-      </aside>
-    )}
 
     <div className="report-disclaimer-bar screen-only" role="note">
       <Info size={19} strokeWidth={1.9} aria-hidden="true" />
