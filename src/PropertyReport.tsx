@@ -133,15 +133,42 @@ export function PropertyReport({ property, response, selectedIndex, onSelect, on
     } finally { setSharing(false); }
   }
 
+  function handlePrint() {
+    window.dispatchEvent(new Event("resize"));
+    window.setTimeout(() => {
+      window.print();
+    }, 60);
+  }
+
+  const extraImprovementsValue =
+    property.totalValue != null &&
+    property.buildingValue != null &&
+    property.landValue != null &&
+    property.totalValue - property.buildingValue - property.landValue > 0
+      ? property.totalValue - property.buildingValue - property.landValue
+      : undefined;
+
+  const deedRef =
+    property.deedBook && property.deedPage
+      ? `Book ${property.deedBook}, Pg ${property.deedPage}`
+      : property.deedBook
+        ? `Book ${property.deedBook}`
+        : undefined;
+
   const facts = [
     { label: "Heated area", icon: Home, value: property.heatedArea ? `${formatNumber(property.heatedArea)} sq ft` : undefined },
-    { label: "Year built", icon: CalendarDays, value: property.yearBuilt ? String(property.yearBuilt) : undefined },
+    { label: "Year built", icon: CalendarDays, value: property.yearBuilt ? `${property.yearBuilt}${property.effectiveYearBuilt && property.effectiveYearBuilt !== property.yearBuilt ? ` (Eff. ${property.effectiveYearBuilt})` : ""}` : undefined },
     { label: "Acreage", icon: Trees, value: property.totalAcres == null ? undefined : `${formatNumber(property.totalAcres)} ${property.totalAcres === 1 ? "acre" : "acres"}` },
+    { label: "Tax assessed value", icon: Coins, value: property.totalValue == null ? undefined : formatCurrency(property.totalValue) },
+    { label: "Building value", icon: Building2, value: property.buildingValue == null ? undefined : formatCurrency(property.buildingValue) },
+    { label: "Land value", icon: LandPlot, value: property.landValue == null ? undefined : formatCurrency(property.landValue) },
     { label: "Bedrooms", icon: BedDouble, value: property.bedrooms == null ? undefined : String(property.bedrooms) },
     { label: "Bathrooms", icon: Bath, value: property.fullBaths == null ? undefined : `${property.fullBaths} full${property.halfBaths ? `, ${property.halfBaths} half` : ""}` },
-    { label: "Tax assessed value", icon: Coins, value: property.totalValue == null ? undefined : formatCurrency(property.totalValue) },
+    { label: "Stories", icon: Layers, value: property.stories == null ? undefined : `${property.stories} ${property.stories === 1 ? "story" : "stories"}` },
     { label: "Exterior", icon: Layers, value: property.exteriorWall },
     { label: "Roof", icon: Warehouse, value: property.roofCover || property.roofStructure },
+    { label: "Foundation / Heat", icon: Home, value: [property.foundation, property.heatingType].filter(Boolean).join(" · ") || undefined },
+    { label: "Deed reference", icon: FileText, value: deedRef },
   ].filter((fact): fact is { label: string; icon: typeof MapPin; value: string } => Boolean(fact.value));
   const factColumns = facts.length === 1 ? 1 : facts.length === 2 || facts.length === 4 ? 2 : 3;
   const shortcuts = [
@@ -153,8 +180,78 @@ export function PropertyReport({ property, response, selectedIndex, onSelect, on
   const parcel = property.parcelId || property.pin;
   const manualSearch = resources.records.some((link) => link.href && link.kind === "website");
   const hasMap = Boolean(property.parcelRings?.length);
+  const countyLabel = property.county === "North Carolina" ? "North Carolina" : `${property.county} County`;
+
+  const reportDateObj = response.generatedAt ? new Date(response.generatedAt) : new Date();
+  const formattedReportDate = new Intl.DateTimeFormat("en-US", {
+    month: "2-digit",
+    day: "2-digit",
+    year: "numeric",
+  }).format(Number.isNaN(reportDateObj.getTime()) ? new Date() : reportDateObj);
+
+  const coordinatesLabel =
+    property.latitude != null && property.longitude != null
+      ? `${property.latitude.toFixed(4)}° N, ${Math.abs(property.longitude).toFixed(4)}° W`
+      : "NC Public GIS";
 
   return <>
+    {/* ==================== PRINT-ONLY LETTERHEAD HEADER ==================== */}
+    <div className="print-only print-letterhead-top">
+      <table className="print-hdr-table">
+        <tbody>
+          <tr>
+            <td className="print-hdr-logo">
+              <img src="/agency-logo.png" alt="Bill Layne Insurance Agency" loading="eager" />
+            </td>
+            <td className="print-hdr-box">
+              <div className="print-docbox">
+                <div className="print-docbox-cap">PROPERTY REFERENCE DOSSIER</div>
+                <table>
+                  <tbody>
+                    <tr>
+                      <td className="k">Report Date</td>
+                      <td className="v">{formattedReportDate}</td>
+                    </tr>
+                    <tr>
+                      <td className="k">Jurisdiction</td>
+                      <td className="v">{countyLabel}, NC</td>
+                    </tr>
+                    <tr>
+                      <td className="k">Parcel / PIN</td>
+                      <td className="v">{parcel || "County Lookup"}</td>
+                    </tr>
+                    <tr>
+                      <td className="k">Record Status</td>
+                      <td className="v">{property.hasCountyRecord ? "Verified County Parcel" : "Address Located"}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <hr className="print-rule-navy" />
+      <div className="print-rule-gold" />
+
+      <div className="print-subject-bar">
+        <div className="print-subject-title">
+          NORTH CAROLINA PROPERTY &amp; HOME INSURANCE REFERENCE REPORT &mdash; {displayAddress(property.officialAddress)}
+        </div>
+        <div className="print-subject-meta">
+          <span><strong>Searched Address:</strong> {property.searchedAddress}</span>
+          <span>&bull;</span>
+          <span><strong>Coordinates:</strong> {coordinatesLabel}</span>
+          {deedRef && (
+            <>
+              <span>&bull;</span>
+              <span><strong>Deed:</strong> {deedRef}</span>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+
     <header className="report-header">
       <div className="report-heading">
         <p className="report-eyebrow">Your property report</p>
@@ -163,7 +260,7 @@ export function PropertyReport({ property, response, selectedIndex, onSelect, on
           <button className="icon-button" type="button" aria-label="Copy address" title="Copy address" onClick={() => void copy(property.recordAddressDiffers ? property.officialAddress : property.searchedAddress, "Address")}><Copy size={17} aria-hidden="true" /></button>
         </div>
         <div className="report-meta">
-          <span>{property.county === "North Carolina" ? "North Carolina" : `${property.county} County`}</span>
+          <span>{countyLabel}</span>
           {parcel && <><span className="meta-dot" aria-hidden="true">&bull;</span><span>Parcel {parcel}</span>
             <button className="icon-button" type="button" aria-label="Copy parcel number" title="Copy parcel number" onClick={() => void copy(parcel, "Parcel number")}><Copy size={16} aria-hidden="true" /></button></>}
           <span className={property.hasCountyRecord ? "verified-badge" : "limited-badge"}>{property.hasCountyRecord ? <CheckCircle2 size={15} aria-hidden="true" /> : <AlertTriangle size={15} aria-hidden="true" />}
@@ -173,7 +270,7 @@ export function PropertyReport({ property, response, selectedIndex, onSelect, on
       </div>
       <div className="report-header-actions">
         <button id="change-address" type="button" onClick={onChangeAddress} disabled={editing}><Pencil size={17} aria-hidden="true" />Change address</button>
-        <button type="button" onClick={() => window.print()}><Printer size={17} aria-hidden="true" />Print / PDF</button>
+        <button type="button" onClick={handlePrint}><Printer size={17} aria-hidden="true" />Print / Save PDF</button>
         <button type="button" onClick={() => void share()} disabled={sharing}><Share2 size={17} aria-hidden="true" />Share</button>
       </div>
     </header>
@@ -196,11 +293,81 @@ export function PropertyReport({ property, response, selectedIndex, onSelect, on
       {property.recordAddressDiffers && <div className="notice address-notice"><MapPin size={21} /><div><strong>The county uses a different property address.</strong><span>You searched {property.searchedAddress}. This is the parcel returned for that location. Confirm the address and boundary before relying on this record.</span></div></div>}
       <div className={`overview-grid${hasMap ? "" : " overview-grid--single"}`}>
         <div className="glance-card">
-          <h3>Property at a glance</h3>
-          {!property.hasCountyRecord ? <div className="notice limited-record-notice"><AlertTriangle size={21} /><div><strong>Address found. Automatic parcel details are unavailable.</strong><span>{response.note || "Use the county search and statewide resources below. No property facts have been assumed."}</span></div></div>
-            : facts.length ? <><dl className={`fact-grid fact-grid--${factColumns}`}>{facts.map(({ icon: Icon, ...fact }) => <div key={fact.label}><dt><Icon size={30} strokeWidth={1.6} aria-hidden="true" />{fact.label}</dt><dd>{fact.value}</dd></div>)}</dl>
-              <p className="fact-source-note">County record details.{facts.length < 8 ? " See the property card for more." : " Verify with the original source."}{property.totalValue != null ? " Tax value is not rebuild cost." : ""}</p></>
-              : <div className="notice limited-record-notice"><FileSearch size={21} /><div><strong>Parcel matched; building details were not supplied.</strong><span>Check the available property card or county website for further details.</span></div></div>}
+          <div className="screen-only">
+            <h3>Property at a glance</h3>
+            {!property.hasCountyRecord ? <div className="notice limited-record-notice"><AlertTriangle size={21} /><div><strong>Address found. Automatic parcel details are unavailable.</strong><span>{response.note || "Use the county search and statewide resources below. No property facts have been assumed."}</span></div></div>
+              : facts.length ? <><dl className={`fact-grid fact-grid--${factColumns}`}>{facts.map(({ icon: Icon, ...fact }) => <div key={fact.label}><dt><Icon size={30} strokeWidth={1.6} aria-hidden="true" />{fact.label}</dt><dd>{fact.value}</dd></div>)}</dl>
+                <p className="fact-source-note">County record details.{facts.length < 8 ? " See the property card for more." : " Verify with the original source."}{property.totalValue != null ? " Tax value is not rebuild cost." : ""}</p></>
+                : <div className="notice limited-record-notice"><FileSearch size={21} /><div><strong>Parcel matched; building details were not supplied.</strong><span>Check the available property card or county website for further details.</span></div></div>}
+          </div>
+
+          {/* PRINT-ONLY STRUCTURED COUNTY RECORD TABLE */}
+          <div className="print-only print-record-panel">
+            <div className="print-panel-cap">1. OFFICIAL COUNTY ASSESSMENT &amp; PROPERTY SUMMARY</div>
+            <table className="print-data-table">
+              <tbody>
+                <tr>
+                  <td className="k">Total Tax Value</td>
+                  <td className="v">{property.totalValue != null ? formatCurrency(property.totalValue) : "See Tax Card"}</td>
+                  <td className="k">Assessed Building</td>
+                  <td className="v">{property.buildingValue != null ? formatCurrency(property.buildingValue) : "See Tax Card"}</td>
+                </tr>
+                <tr>
+                  <td className="k">Assessed Land</td>
+                  <td className="v">{property.landValue != null ? formatCurrency(property.landValue) : "See Tax Card"}</td>
+                  <td className="k">{extraImprovementsValue != null ? "Outbuildings / Other" : "Lot Acreage"}</td>
+                  <td className="v">
+                    {extraImprovementsValue != null
+                      ? formatCurrency(extraImprovementsValue)
+                      : property.totalAcres != null
+                        ? `${formatNumber(property.totalAcres)} acres`
+                        : "See GIS"}
+                  </td>
+                </tr>
+                <tr>
+                  <td className="k">Lot Size / Acres</td>
+                  <td className="v">{property.totalAcres != null ? `${formatNumber(property.totalAcres)} ${property.totalAcres === 1 ? "acre" : "acres"}` : "See GIS"}</td>
+                  <td className="k">Deed Reference</td>
+                  <td className="v">{deedRef || "County Register"}</td>
+                </tr>
+                <tr>
+                  <td className="k">Year Built / Stories</td>
+                  <td className="v">
+                    {property.yearBuilt || property.stories
+                      ? [
+                          property.yearBuilt ? `Built ${property.yearBuilt}` : null,
+                          property.stories ? `${property.stories} Story` : null,
+                        ]
+                          .filter(Boolean)
+                          .join(" · ")
+                      : "Verify on Tax Card"}
+                  </td>
+                  <td className="k">Heated Living Area</td>
+                  <td className="v">{property.heatedArea ? `${formatNumber(property.heatedArea)} sq ft` : "Verify on Tax Card"}</td>
+                </tr>
+                <tr>
+                  <td className="k">Bedrooms / Baths</td>
+                  <td className="v">
+                    {property.bedrooms != null || property.fullBaths != null
+                      ? [
+                          property.bedrooms != null ? `${property.bedrooms} Bed` : null,
+                          property.fullBaths != null ? `${property.fullBaths} Full${property.halfBaths ? ` / ${property.halfBaths} Half` : ""} Bath` : null,
+                        ]
+                          .filter(Boolean)
+                          .join(" · ")
+                      : "Verify on Tax Card"}
+                  </td>
+                  <td className="k">Exterior / Roof</td>
+                  <td className="v">
+                    {[property.exteriorWall, property.roofCover || property.roofStructure].filter(Boolean).join(" · ") || "Confirm Below"}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <p className="print-record-footnote">
+              Source: {countyLabel} GIS &amp; NC OneMap public parcel records. Tax assessment values are for county tax billing only and do not represent insurance replacement cost.
+            </p>
+          </div>
         </div>
         <ParcelMap property={property} />
       </div>
@@ -238,5 +405,153 @@ export function PropertyReport({ property, response, selectedIndex, onSelect, on
     </section>}
     <ResourceGroup id="insurance-resources" eyebrow="More home resources" title="Prepare before and after a loss" links={AGENCY_RESOURCES} />
     <section className="closing-band"><div><p className="eyebrow">Bill Layne Insurance</p><h3>Questions about your home coverage?</h3><p>Our local team can help verify the details carriers use and explain what still needs to be confirmed.</p></div><div className="closing-actions"><a href={quoteHref}>Request an insurance review <ArrowRight size={18} /></a><a href="tel:3368351993"><Phone size={18} />Call 336-835-1993</a></div></section>
+
+    {/* ==================== PRINT-ONLY LETTERHEAD DOSSIER BODY & FOOTER ==================== */}
+    <div className="print-only print-dossier-bottom">
+      <div className="print-section-block">
+        <div className="print-panel-cap">2. UNDERSTANDING YOUR FIGURES &mdash; COUNTY TAX VALUE VS. INSURANCE REBUILD COST</div>
+        <table className="print-comparison-table">
+          <tbody>
+            <tr>
+              <td>
+                <strong>County Tax Assessment ({property.totalValue != null ? formatCurrency(property.totalValue) : "Tax Value"})</strong>
+                <p>
+                  Used by {countyLabel} for property tax billing on a multi-year revaluation schedule. Total tax value includes land ({property.landValue != null ? formatCurrency(property.landValue) : "land value"}), which does not burn or blow away.
+                </p>
+              </td>
+              <td>
+                <strong>Dwelling Rebuild Cost (Coverage A)</strong>
+                <p>
+                  Based on 100% of today&apos;s local NC construction labor, lumber, roofing, and debris removal to rebuild the home from the ground up (excluding land).
+                </p>
+              </td>
+              <td>
+                <strong>Why Confirming Details Matters</strong>
+                <p>
+                  County tax records often miss roof replacements, HVAC/plumbing upgrades, or finished areas. Confirming updates below prevents coverage gaps and unlocks policy discounts.
+                </p>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div className="print-section-block">
+        <div className="print-panel-cap">3. HOMEOWNER PROPERTY &amp; DISCOUNT VERIFICATION WORKSHEET (KEEP FOR YOUR HOME FILE)</div>
+        <table className="print-worksheet-table">
+          <tbody>
+            <tr>
+              <th scope="row">Roofing System<br /><span>Biggest NC Rate Factor</span></th>
+              <td>
+                Year Installed: <u>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</u> &nbsp;&bull;&nbsp;
+                &#9744; Architectural Shingle &nbsp; &#9744; 3-Tab Shingle &nbsp; &#9744; Metal &nbsp; &#9744; Other: <u>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</u>
+              </td>
+            </tr>
+            <tr>
+              <th scope="row">Home Systems<br /><span>Updates &amp; Credits</span></th>
+              <td>
+                HVAC Year: <u>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</u> &nbsp;&bull;&nbsp;
+                Water Heater Year: <u>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</u> &nbsp;&bull;&nbsp;
+                Plumbing Year: <u>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</u> &nbsp;&bull;&nbsp;
+                Electrical: &#9744; 100A &nbsp; &#9744; 200A+ (Yr: <u>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</u>)
+              </td>
+            </tr>
+            <tr>
+              <th scope="row">Protective Credits<br /><span>Policy Discounts</span></th>
+              <td>
+                &#9744; Central Monitored Alarm &nbsp;&nbsp; &#9744; Smoke/CO Detectors + Deadbolts &nbsp;&nbsp; &#9744; Fire Extinguisher &nbsp;&nbsp; &#9744; Water Shutoff / Leak Sensor &nbsp;&nbsp; &#9744; Generator
+              </td>
+            </tr>
+            <tr>
+              <th scope="row">Other Structures<br /><span>Coverage B &amp; Liability</span></th>
+              <td>
+                &#9744; Detached Garage / Workshop &nbsp;&nbsp; &#9744; Storage Shed / Barn &nbsp;&nbsp; &#9744; Deck / Screened Porch &nbsp;&nbsp; &#9744; Finished Basement &nbsp;&nbsp; &#9744; Wood Stove &nbsp;&nbsp; &#9744; Pool / Trampoline
+              </td>
+            </tr>
+            <tr>
+              <th scope="row">Coverage Notes<br /><span>Current Policy Check</span></th>
+              <td>
+                Current Carrier: <u>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</u> &nbsp;&bull;&nbsp;
+                Renewal Date: <u>&nbsp;&nbsp;&nbsp;&nbsp;/&nbsp;&nbsp;&nbsp;&nbsp;/20&nbsp;&nbsp;&nbsp;&nbsp;</u> &nbsp;&bull;&nbsp;
+                Preferred Deductible: &#9744; $1,000 &nbsp; &#9744; $2,500 &nbsp; &#9744; Other: <u>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</u>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <table className="print-bottom-split">
+        <tbody>
+          <tr>
+            <td className="print-links-cell">
+              <div className="print-panel-cap">4. OFFICIAL PROPERTY PORTALS &amp; PREPAREDNESS LINKS</div>
+              <table className="print-links-table">
+                <tbody>
+                  <tr>
+                    <td className="k">County Tax Card</td>
+                    <td className="v">
+                      {property.links.taxCard ? (
+                        <a href={property.links.taxCard}>{countyLabel} Official Parcel Tax Card &amp; Building Record &rarr;</a>
+                      ) : (
+                        <span>Search {countyLabel} Tax Assessor Portal using Parcel {parcel || "ID"}</span>
+                      )}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="k">County GIS Map</td>
+                    <td className="v">
+                      {property.links.gisParcel || property.links.gis ? (
+                        <a href={property.links.gisParcel || property.links.gis}>{countyLabel} Interactive GIS &amp; Aerial Map &rarr;</a>
+                      ) : (
+                        <span>NC OneMap &amp; County GIS Parcel Viewer</span>
+                      )}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="k">Flood Resources</td>
+                    <td className="v">
+                      <a href={property.links.fema}>FEMA Flood Map (msc.fema.gov)</a> &nbsp;&bull;&nbsp;{" "}
+                      <a href={property.links.ncFlood}>NC Flood Risk Info System (fris.nc.gov)</a>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="k">Home Inventory</td>
+                    <td className="v">
+                      <a href="https://billlayne.github.io/HOME-INVENTORY/">Room-by-Room Inventory (billlayne.github.io/HOME-INVENTORY)</a> &nbsp;&bull;&nbsp;{" "}
+                      <a href="https://www.sendbilldocs.com/">SendBillDocs.com</a>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </td>
+            <td className="print-cta-cell">
+              <div className="print-agency-box">
+                <div className="print-agency-box-cap">FREE NC COVERAGE REVIEW</div>
+                <div className="print-agency-box-body">
+                  <strong>Bill Layne Insurance Agency</strong>
+                  <p>Bring or email this sheet to verify your rebuild estimate, roof age, and available NC home discounts.</p>
+                  <div className="print-agency-contact">
+                    <div><strong>Call:</strong> 336-835-1993 &bull; <strong>Text:</strong> 336-827-9065</div>
+                    <div><strong>Email:</strong> Save@BillLayneInsurance.com</div>
+                    <div><strong>Web:</strong> www.BillLayneInsurance.com</div>
+                  </div>
+                </div>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div className="print-letterhead-foot">
+        <div>
+          <span className="a">Bill Layne Insurance Agency</span> &nbsp;&bull;&nbsp; 1283 N Bridge St, PO Box 827, Elkin, NC 28621
+          &nbsp;&bull;&nbsp; Phone 336-835-1993 &nbsp;&bull;&nbsp; Text 336-827-9065 &nbsp;&bull;&nbsp; Save@BillLayneInsurance.com
+          &nbsp;&bull;&nbsp; www.BillLayneInsurance.com &nbsp;&bull;&nbsp; <span className="g">Serving North Carolina since 2005</span>
+        </div>
+        <div className="print-foot-disclaimer">
+          Informational public-record summary only. County tax records may be incomplete or outdated, flood links do not replace an official flood zone determination or survey, and this report is not an insurance binder or quote.
+        </div>
+      </div>
+    </div>
   </>;
 }

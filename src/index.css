@@ -1715,25 +1715,502 @@ main:focus, .results:focus { outline: none; }
   .rebuild-summary { display: grid; }
 }
 
+.print-only {
+  display: none;
+}
+
 @media print {
-  @page { margin: .55in; }
-  body, .report-page main { color: #0A1F3C; background: white; }
-  .app-shell { padding: 0 !important; }
-  .site-header, .search-hero, .feature-strip, .resource-cards-section, .preview-showcase-section, .guidance-section, .contact-panel-section, .faq-section, .result-nav, .result-picker, .report-header-actions, .icon-button, .cta-band, .header-tag, .report-status, .copy-fallback, .address-editor, .mobile-dock, .site-footer, .skip-link, .rebuild-summary button { display: none !important; }
-  .results { max-width: none; padding: 0; }
-  .property-summary, .parcel-map-section, .resource-item, .rebuild-explainer { break-inside: avoid; box-shadow: none; }
-  .resource-section { break-inside: auto; }
-  .fact-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .home-links-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-  .resource-grid { grid-template-columns: 1fr; }
-  .rebuild-details { display: block !important; }
-  .parcel-map-frame, .parcel-map { min-height: 280px; }
-  .resource-item { color: #0A1F3C; box-shadow: none; }
-  .report-page main { background: white; }
-  .overview-grid { grid-template-columns: 1fr; }
-  .glance-card, .parcel-map-section, .resource-section, .rebuild-explainer { box-shadow: none; }
-  .closing-band { border: 1px solid #c9d5dc; background: white; }
-  .closing-band h3, .closing-band .eyebrow, .closing-band p:not(.eyebrow), .closing-actions a { color: #0A1F3C; }
+  @page {
+    size: letter portrait;
+    margin: 0.36in 0.45in;
+  }
+
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  html,
+  body,
+  .report-page main,
+  .app-shell {
+    margin: 0 !important;
+    padding: 0 !important;
+    color: #000000 !important;
+    background: #ffffff !important;
+    font-family: Arial, Helvetica, sans-serif !important;
+    font-size: 9.5pt !important;
+    line-height: 1.25 !important;
+  }
+
+  /* Hide all web-only UI Chrome, buttons, and multi-page cards */
+  .screen-only,
+  .site-header,
+  .search-hero,
+  .feature-strip,
+  .resource-cards-section,
+  .preview-showcase-section,
+  .guidance-section,
+  .contact-panel-section,
+  .faq-section,
+  .report-header,
+  .result-nav,
+  .result-picker,
+  .report-header-actions,
+  .icon-button,
+  .home-links-section,
+  .cta-band,
+  .resource-section,
+  .manual-search,
+  .source-note,
+  .rebuild-explainer,
+  .closing-band,
+  .header-tag,
+  .report-status,
+  .copy-fallback,
+  .address-editor,
+  .mobile-dock,
+  .site-footer,
+  .skip-link,
+  .parcel-map-chip,
+  .parcel-map-footer,
+  .leaflet-control-zoom {
+    display: none !important;
+  }
+
+  .print-only {
+    display: block !important;
+  }
+
+  .results {
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* ---------- LOCKED LETTERHEAD HEADER ---------- */
+  .print-letterhead-top {
+    margin: 0 0 8px !important;
+  }
+
+  .print-hdr-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .print-hdr-table td {
+    vertical-align: bottom;
+    padding: 0;
+  }
+
+  .print-hdr-logo img {
+    max-height: 52px;
+    max-width: 240px;
+    width: auto;
+    height: auto;
+    display: block;
+  }
+
+  .print-hdr-box {
+    text-align: right;
+    width: 48%;
+  }
+
+  .print-docbox {
+    display: inline-block;
+    text-align: left;
+    border: 1.5px solid #003366;
+    min-width: 245px;
+    background: #ffffff;
+  }
+
+  .print-docbox-cap {
+    background: #003366;
+    color: #ffffff;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 9.5pt;
+    font-weight: bold;
+    text-align: center;
+    padding: 3px 10px;
+    letter-spacing: 0.4px;
+  }
+
+  .print-docbox table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .print-docbox td {
+    font-size: 8.2pt;
+    padding: 2px 8px;
+    border-top: 1px solid #d9dee6;
+  }
+
+  .print-docbox td.k {
+    color: #5a6675;
+    white-space: nowrap;
+  }
+
+  .print-docbox td.v {
+    text-align: right;
+    font-weight: bold;
+    color: #10223b;
+  }
+
+  .print-rule-navy {
+    border: 0;
+    border-top: 2px solid #003366;
+    margin: 7px 0 0;
+  }
+
+  .print-rule-gold {
+    height: 3px;
+    background: #FFC300;
+    margin: 0 0 8px;
+    font-size: 0;
+    line-height: 0;
+  }
+
+  .print-subject-bar {
+    border-left: 4px solid #FFC300;
+    background: #eef3f9;
+    padding: 5px 10px;
+    margin: 0 0 8px;
+  }
+
+  .print-subject-title {
+    font-family: Georgia, "Times New Roman", serif;
+    font-weight: bold;
+    color: #003366;
+    font-size: 10.5pt;
+    line-height: 1.2;
+  }
+
+  .print-subject-meta {
+    margin-top: 2px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    font-size: 8.3pt;
+    color: #1e293b;
+  }
+
+  /* ---------- SECTION 1: TOP TWO-COLUMN OVERVIEW + PARCEL MAP ---------- */
+  .property-summary {
+    padding: 0 !important;
+    margin: 0 0 8px !important;
+    break-inside: avoid;
+  }
+
+  .property-summary .notice.address-notice {
+    margin: 0 0 6px !important;
+    padding: 5px 10px !important;
+    font-size: 8pt !important;
+  }
+
+  .overview-grid {
+    display: grid !important;
+    grid-template-columns: 1.32fr 1fr !important;
+    gap: 10px !important;
+    align-items: stretch !important;
+  }
+
+  .overview-grid--single {
+    grid-template-columns: 1fr !important;
+  }
+
+  .glance-card,
+  .parcel-map-section {
+    padding: 0 !important;
+    border: 1.5px solid #003366 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    background: #ffffff !important;
+    overflow: hidden !important;
+  }
+
+  .print-panel-cap {
+    background: #003366;
+    color: #ffffff;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 8.2pt;
+    font-weight: bold;
+    padding: 4px 8px;
+    letter-spacing: 0.25px;
+    white-space: nowrap;
+  }
+
+  .print-data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 8.3pt;
+  }
+
+  .print-data-table td {
+    padding: 4.5px 6px;
+    border-bottom: 1px solid #d9dee6;
+    vertical-align: middle;
+  }
+
+  .print-data-table tr:nth-child(even) td {
+    background: #f4f6f9;
+  }
+
+  .print-data-table td.k {
+    color: #475569;
+    font-weight: 600;
+    width: 22%;
+    white-space: nowrap;
+  }
+
+  .print-data-table td.v {
+    color: #003366;
+    font-weight: bold;
+    width: 28%;
+    border-right: 1px solid #d9dee6;
+  }
+
+  .print-data-table td.v:last-child {
+    border-right: 0;
+  }
+
+  .print-record-footnote {
+    margin: 0;
+    padding: 4px 8px;
+    font-size: 7.4pt;
+    color: #475569;
+    background: #f8fafc;
+    line-height: 1.3;
+  }
+
+  .parcel-map-frame,
+  .parcel-map {
+    min-height: 162px !important;
+    height: 162px !important;
+    max-height: 162px !important;
+  }
+
+  .parcel-map .leaflet-control-attribution {
+    font-size: 6.5pt !important;
+    padding: 1px 4px !important;
+  }
+
+  .parcel-map-note {
+    padding: 3px 8px !important;
+    font-size: 7.2pt !important;
+    color: #475569 !important;
+    background: #f8fafc !important;
+    border-top: 1px solid #d9dee6 !important;
+  }
+
+  /* ---------- SECTIONS 2, 3, 4 & FOOTER ---------- */
+  .print-dossier-bottom {
+    display: block !important;
+  }
+
+  .print-section-block {
+    border: 1.5px solid #003366;
+    margin-bottom: 8px;
+    break-inside: avoid;
+    background: #ffffff;
+  }
+
+  .print-comparison-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .print-comparison-table td {
+    width: 33.33%;
+    vertical-align: top;
+    padding: 6px 8px;
+    border-right: 1px solid #d9dee6;
+    background: #eef3f9;
+    font-size: 8pt;
+    line-height: 1.3;
+  }
+
+  .print-comparison-table td:last-child {
+    border-right: 0;
+  }
+
+  .print-comparison-table strong {
+    display: block;
+    color: #003366;
+    font-size: 8.5pt;
+    margin-bottom: 2px;
+  }
+
+  .print-comparison-table p {
+    margin: 0;
+    color: #1e293b;
+  }
+
+  .print-worksheet-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 8.2pt;
+  }
+
+  .print-worksheet-table th,
+  .print-worksheet-table td {
+    padding: 5px 8px;
+    border-bottom: 1px solid #d9dee6;
+    vertical-align: middle;
+    text-align: left;
+  }
+
+  .print-worksheet-table tr:last-child th,
+  .print-worksheet-table tr:last-child td {
+    border-bottom: 0;
+  }
+
+  .print-worksheet-table tr:nth-child(even) th,
+  .print-worksheet-table tr:nth-child(even) td {
+    background: #f4f6f9;
+  }
+
+  .print-worksheet-table th {
+    width: 22%;
+    color: #003366;
+    font-weight: bold;
+    border-right: 1px solid #d9dee6;
+    line-height: 1.15;
+  }
+
+  .print-worksheet-table th span {
+    display: block;
+    font-weight: normal;
+    font-size: 7.2pt;
+    color: #5a6675;
+    margin-top: 1px;
+  }
+
+  .print-worksheet-table td {
+    color: #10223b;
+    line-height: 1.35;
+  }
+
+  .print-bottom-split {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 8px;
+    break-inside: avoid;
+  }
+
+  .print-bottom-split > tbody > tr > td {
+    vertical-align: stretch;
+    padding: 0;
+  }
+
+  .print-links-cell {
+    width: 64%;
+    padding-right: 8px !important;
+  }
+
+  .print-cta-cell {
+    width: 36%;
+  }
+
+  .print-links-table {
+    width: 100%;
+    border-collapse: collapse;
+    border: 1.5px solid #003366;
+    border-top: 0;
+    font-size: 8pt;
+  }
+
+  .print-links-table td {
+    padding: 4px 8px;
+    border-bottom: 1px solid #d9dee6;
+  }
+
+  .print-links-table tr:last-child td {
+    border-bottom: 0;
+  }
+
+  .print-links-table tr:nth-child(even) td {
+    background: #f4f6f9;
+  }
+
+  .print-links-table td.k {
+    width: 26%;
+    font-weight: bold;
+    color: #003366;
+    border-right: 1px solid #d9dee6;
+    white-space: nowrap;
+  }
+
+  .print-links-table td.v a {
+    color: #003366;
+    text-decoration: underline;
+    font-weight: 600;
+  }
+
+  .print-agency-box {
+    height: 100%;
+    border: 1.5px solid #003366;
+    background: #eef3f9;
+  }
+
+  .print-agency-box-cap {
+    background: #003366;
+    color: #FFC300;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 8.6pt;
+    font-weight: bold;
+    padding: 4px 9px;
+    letter-spacing: 0.3px;
+  }
+
+  .print-agency-box-body {
+    padding: 6px 9px;
+    font-size: 8pt;
+    line-height: 1.3;
+    color: #10223b;
+  }
+
+  .print-agency-box-body strong {
+    color: #003366;
+    font-size: 8.8pt;
+  }
+
+  .print-agency-box-body p {
+    margin: 2px 0 5px;
+    font-size: 7.7pt;
+    color: #334155;
+  }
+
+  .print-agency-contact {
+    font-size: 7.9pt;
+    line-height: 1.35;
+    color: #003366;
+  }
+
+  .print-letterhead-foot {
+    border-top: 2px solid #003366;
+    padding-top: 5px;
+    font-size: 8pt;
+    color: #003366;
+    line-height: 1.35;
+    break-inside: avoid;
+  }
+
+  .print-letterhead-foot .a {
+    font-weight: bold;
+  }
+
+  .print-letterhead-foot .g {
+    color: #9a7b16;
+    font-weight: bold;
+  }
+
+  .print-foot-disclaimer {
+    margin-top: 2px;
+    font-size: 7pt;
+    color: #5a6675;
+    line-height: 1.25;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

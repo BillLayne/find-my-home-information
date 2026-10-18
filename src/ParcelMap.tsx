@@ -50,10 +50,36 @@ export function ParcelMap({ property }: { property: PublicProperty }) {
       }).addTo(map).bindTooltip("Searched address");
     }
 
-    map.fitBounds(parcel.getBounds(), { padding: [36, 36], maxZoom: 19 });
-    requestAnimationFrame(() => map.invalidateSize());
+    const fitParcel = () => {
+      map.invalidateSize({ animate: false, pan: false });
+      const isPrint = window.matchMedia("print").matches;
+      const padding: L.PointTuple = isPrint ? [12, 12] : [32, 32];
+      map.fitBounds(parcel.getBounds(), { padding, maxZoom: isPrint ? 18 : 19, animate: false });
+    };
+
+    const onPrintChange = () => {
+      fitParcel();
+      window.setTimeout(fitParcel, 30);
+    };
+
+    fitParcel();
+    requestAnimationFrame(fitParcel);
+
+    const printMedia = window.matchMedia("print");
+    printMedia.addEventListener?.("change", onPrintChange);
+
+    const observer = typeof ResizeObserver !== "undefined"
+      ? new ResizeObserver(() => fitParcel())
+      : null;
+    observer?.observe(containerRef.current);
+    window.addEventListener("beforeprint", onPrintChange);
+    window.addEventListener("afterprint", onPrintChange);
 
     return () => {
+      printMedia.removeEventListener?.("change", onPrintChange);
+      observer?.disconnect();
+      window.removeEventListener("beforeprint", onPrintChange);
+      window.removeEventListener("afterprint", onPrintChange);
       map.remove();
     };
   }, [property.latitude, property.longitude, property.parcelRings]);
@@ -62,6 +88,7 @@ export function ParcelMap({ property }: { property: PublicProperty }) {
 
   return (
     <section id="parcel-map" className="parcel-map-section" aria-labelledby="parcel-map-title">
+      <div className="print-only print-panel-cap">AERIAL PARCEL &amp; BOUNDARY MAP (NC ONEMAP)</div>
       <div className="parcel-map-frame">
         <span className="parcel-map-chip"><MapPinned size={14} aria-hidden="true" />Aerial view &middot; county parcel boundary</span>
         <div className="parcel-map" ref={containerRef} aria-label={`Highlighted parcel map for ${property.officialAddress}`} />
