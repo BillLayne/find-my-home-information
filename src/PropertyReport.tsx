@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { AlertTriangle, ArrowRight, Bath, BedDouble, Building2, CalendarDays, Camera, CheckCircle2, ChevronDown, ChevronRight, ChevronUp, Coins, Copy, ExternalLink, FileSearch, FileText, Flame, FolderSearch, Home, LandPlot, Layers, MapPin, Pencil, Phone, Printer, Share2, Shield, ShieldCheck, Trees, Warehouse, Waves } from "lucide-react";
+import { AlertTriangle, ArrowRight, Bath, BedDouble, Briefcase, Building2, CalendarDays, Camera, CheckCircle2, ChevronRight, Coins, Copy, ExternalLink, FileSearch, FileText, Flame, FolderSearch, Home, Info, LandPlot, Layers, MapPin, Pencil, Phone, Printer, Share2, Shield, ShieldCheck, Trees, Warehouse, Waves } from "lucide-react";
 import type { PublicProperty, PublicPropertyResponse } from "../shared/property";
 import { destinationKind, destinationLabel, propertyShareUrl, type DestinationKind } from "./lib/report";
 import { ParcelMap } from "./ParcelMap";
+
+const IMG_REPORT_BANNER = "https://img.billlayneinsurance.com/i/2026/10/a-clearer-picture-of-home-p9t9ps.webp";
 
 type ResourceLink = {
   label: string; description: string; href?: string; icon: typeof MapPin;
@@ -10,9 +12,9 @@ type ResourceLink = {
 };
 
 const AGENCY_RESOURCES: ResourceLink[] = [
-  { label: "Create a Home Inventory", description: "Photograph rooms and prepare a downloadable belongings inventory.", href: "https://billlayne.github.io/HOME-INVENTORY/", icon: Camera, source: "Agency resource" },
-  { label: "Claims Inventory Worksheet", description: "Organize damaged or missing belongings after a covered loss.", href: "https://www.billlayneinsurance.com/claims-center/claims-inventory.html", icon: FileText, source: "Agency resource" },
-  { label: "Send Documents Securely", description: "Send policy documents, photographs, inspections, or lender information.", href: "https://www.sendbilldocs.com/", icon: FolderSearch, source: "Agency resource" },
+  { label: "Create a home inventory", description: "Photograph rooms and prepare a downloadable belongings inventory.", href: "https://billlayne.github.io/HOME-INVENTORY/", icon: Camera, source: "Agency resource" },
+  { label: "Claims inventory worksheet", description: "Organize damaged or missing belongings after a covered loss.", href: "https://www.billlayneinsurance.com/claims-center/claims-inventory.html", icon: FileText, source: "Agency resource" },
+  { label: "Send documents securely", description: "Send policy documents, photographs, inspections, or lender information.", href: "https://www.sendbilldocs.com/", icon: FolderSearch, source: "Agency resource" },
 ];
 
 // County records are stored in capitals. Show the heading in title case; the
@@ -33,7 +35,7 @@ function resourcesFor(property: PublicProperty) {
     records: [
       { label: "County GIS & aerial map", description: gisKind === "record" ? "County parcel boundaries and available aerial imagery for this property." : "County mapping and available aerial imagery. A manual address or parcel search may be required.", href: links.gisParcel || links.gis, icon: LandPlot, source: "Official" },
       { label: "County property card", description: "Available county assessment and building details.", href: links.taxCard, icon: FileSearch, source: "Official" },
-      { label: "Deed & Register of Deeds", description: "Available deed records or the county's public document search.", href: links.deed, icon: Building2, source: "Official" },
+      { label: "Deed & ownership records", description: "Available deed records or the county's public document search.", href: links.deed, icon: Building2, source: "Official" },
     ],
     photos: [
       { label: "Google Maps & Street View", description: "Search this address for nearby roads and available street-level imagery.", href: links.googleMaps, icon: MapPin, source: "Third party" },
@@ -42,7 +44,7 @@ function resourcesFor(property: PublicProperty) {
     hazards: [
       { label: "FEMA flood map", description: "Search the official FEMA Map Service Center using this address.", href: links.fema, icon: Waves, source: "Official" },
       { label: "NC Flood Risk Information System", description: "Explore North Carolina flood maps and risk information.", href: links.ncFlood, icon: ShieldCheck, source: "Official" },
-      { label: "ReadyNC hazard resources", description: "North Carolina emergency and hazard preparedness resources.", href: links.readyNc, icon: Flame, source: "Official" },
+      { label: "ReadyNC hazard resources", description: "North Carolina emergency and hazard preparedness resources.", href: links.readyNc, icon: AlertTriangle, source: "Official" },
     ],
   };
   for (const group of Object.values(resources)) {
@@ -51,20 +53,58 @@ function resourcesFor(property: PublicProperty) {
   return resources;
 }
 
-function ResourceGroup({ id, title, eyebrow, links }: { id: string; title: string; eyebrow: string; links: ResourceLink[] }) {
+function ResourceGroup({
+  id,
+  title,
+  subtitle,
+  icon: GroupIcon,
+  links,
+}: {
+  id: string;
+  title: string;
+  subtitle: string;
+  icon: typeof FileText;
+  links: ResourceLink[];
+}) {
   const available = links.filter((link) => link.href);
-  return <section id={id} className="resource-section" aria-labelledby={`${id}-title`}>
-    <div className="section-heading"><p>{eyebrow}</p><h3 id={`${id}-title`}>{title}</h3></div>
-    {available.length ? <div className="resource-grid">
-      {available.map(({ icon: Icon, ...link }) => <a key={link.label} className="resource-item" href={link.href} target="_blank" rel="noopener noreferrer">
-        <span className="resource-icon"><Icon size={22} aria-hidden="true" /></span>
-        <span className="resource-copy"><strong>{link.label}</strong><small>{link.description}</small>
-          <span className="resource-meta"><span>{link.source}</span>{link.kind && <span className={`destination destination--${link.kind}`}>{destinationLabel(link.kind)}</span>}</span>
+  return (
+    <section id={id} className="resource-section" aria-labelledby={`${id}-title`}>
+      <div className="resource-card-header">
+        <span className="resource-card-header-icon" aria-hidden="true">
+          <GroupIcon size={26} strokeWidth={1.75} />
         </span>
-        <ExternalLink className="resource-arrow" size={18} aria-hidden="true" /><span className="sr-only">Opens in a new tab</span>
-      </a>)}
-    </div> : <p className="section-intro">No links were returned for this section.</p>}
-  </section>;
+        <div>
+          <h3 id={`${id}-title`}>{title}</h3>
+          <p>{subtitle}</p>
+        </div>
+      </div>
+      {available.length ? (
+        <div className="resource-grid">
+          {available.map(({ icon: Icon, ...link }) => (
+            <a key={link.label} className="resource-item" href={link.href} target="_blank" rel="noopener noreferrer">
+              <span className="resource-icon">
+                <Icon size={20} strokeWidth={1.8} aria-hidden="true" />
+              </span>
+              <span className="resource-copy">
+                <strong>{link.label}</strong>
+                <small>{link.description}</small>
+                <span className="resource-meta">
+                  <span>{link.source}</span>
+                  {link.kind && (
+                    <span className={`destination destination--${link.kind}`}>{destinationLabel(link.kind)}</span>
+                  )}
+                </span>
+              </span>
+              <ExternalLink className="resource-arrow" size={17} aria-hidden="true" />
+              <span className="sr-only">Opens in a new tab</span>
+            </a>
+          ))}
+        </div>
+      ) : (
+        <p className="section-intro">No links were returned for this section.</p>
+      )}
+    </section>
+  );
 }
 
 export function PropertyReport({ property, response, selectedIndex, onSelect, onChangeAddress, quoteHref, editor, editing }: {
@@ -159,17 +199,17 @@ export function PropertyReport({ property, response, selectedIndex, onSelect, on
     { label: "Heated area", icon: Home, value: property.heatedArea ? `${formatNumber(property.heatedArea)} sq ft` : undefined },
     { label: "Year built", icon: CalendarDays, value: property.yearBuilt ? `${property.yearBuilt}${property.effectiveYearBuilt && property.effectiveYearBuilt !== property.yearBuilt ? ` (Eff. ${property.effectiveYearBuilt})` : ""}` : undefined },
     { label: "Acreage", icon: Trees, value: property.totalAcres == null ? undefined : `${formatNumber(property.totalAcres)} ${property.totalAcres === 1 ? "acre" : "acres"}` },
-    { label: "Tax assessed value", icon: Coins, value: property.totalValue == null ? undefined : formatCurrency(property.totalValue) },
-    { label: "Building value", icon: Building2, value: property.buildingValue == null ? undefined : formatCurrency(property.buildingValue) },
-    { label: "Land value", icon: LandPlot, value: property.landValue == null ? undefined : formatCurrency(property.landValue) },
     { label: "Bedrooms", icon: BedDouble, value: property.bedrooms == null ? undefined : String(property.bedrooms) },
     { label: "Bathrooms", icon: Bath, value: property.fullBaths == null ? undefined : `${property.fullBaths} full${property.halfBaths ? `, ${property.halfBaths} half` : ""}` },
+    { label: "Tax assessed value", icon: Coins, value: property.totalValue == null ? undefined : formatCurrency(property.totalValue), isTaxValue: true },
+    { label: "Building value", icon: Building2, value: property.buildingValue == null ? undefined : formatCurrency(property.buildingValue) },
+    { label: "Land value", icon: LandPlot, value: property.landValue == null ? undefined : formatCurrency(property.landValue) },
     { label: "Stories", icon: Layers, value: property.stories == null ? undefined : `${property.stories} ${property.stories === 1 ? "story" : "stories"}` },
     { label: "Exterior", icon: Layers, value: property.exteriorWall },
     { label: "Roof", icon: Warehouse, value: property.roofCover || property.roofStructure },
     { label: "Foundation / Heat", icon: Home, value: [property.foundation, property.heatingType].filter(Boolean).join(" · ") || undefined },
     { label: "Deed reference", icon: FileText, value: deedRef },
-  ].filter((fact): fact is { label: string; icon: typeof MapPin; value: string } => Boolean(fact.value));
+  ].filter((fact): fact is { label: string; icon: typeof MapPin; value: string; isTaxValue?: boolean } => Boolean(fact.value));
   const factColumns = facts.length === 1 ? 1 : facts.length === 2 || facts.length === 4 ? 2 : 3;
   const shortcuts = [
     { ...resources.records[1], label: "Property card", hint: "County records" },
@@ -278,8 +318,21 @@ export function PropertyReport({ property, response, selectedIndex, onSelect, on
     {copyFallback && <label className="copy-fallback">{copyFallback.label}<input readOnly value={copyFallback.value} onFocus={(event) => event.target.select()} /></label>}
 
     <nav className="result-nav" aria-label="Property report sections">
-      <div className="result-nav-links">{sections.map((section) => <a key={section.id} href={`#${section.id}`} aria-current={activeSection === section.id ? "location" : undefined}>{section.label}</a>)}</div>
-      <label className="mobile-section-select">Section<select aria-label="Report section" value={activeSection} onChange={(event) => jumpTo(event.target.value)}>{sections.map((section) => <option key={section.id} value={section.id}>{section.label}</option>)}</select></label>
+      <div className="result-nav-links">
+        {sections.map((section) => (
+          <a
+            key={section.id}
+            href={`#${section.id}`}
+            aria-current={activeSection === section.id ? "location" : undefined}
+            onClick={(event) => {
+              event.preventDefault();
+              jumpTo(section.id);
+            }}
+          >
+            {section.label}
+          </a>
+        ))}
+      </div>
     </nav>
     {editor}
     {response.results.length > 1 && <fieldset className="result-picker" disabled={editing}>
@@ -289,16 +342,76 @@ export function PropertyReport({ property, response, selectedIndex, onSelect, on
       </button>)}
     </fieldset>}
 
+    {/* 1. PROPERTY SUMMARY AND PARCEL MAP */}
     <section id="property-overview" className="property-summary" aria-labelledby="property-address">
       {property.recordAddressDiffers && <div className="notice address-notice"><MapPin size={21} /><div><strong>The county uses a different property address.</strong><span>You searched {property.searchedAddress}. This is the parcel returned for that location. Confirm the address and boundary before relying on this record.</span></div></div>}
       <div className={`overview-grid${hasMap ? "" : " overview-grid--single"}`}>
         <div className="glance-card">
           <div className="screen-only">
             <h3>Property at a glance</h3>
-            {!property.hasCountyRecord ? <div className="notice limited-record-notice"><AlertTriangle size={21} /><div><strong>Address found. Automatic parcel details are unavailable.</strong><span>{response.note || "Use the county search and statewide resources below. No property facts have been assumed."}</span></div></div>
-              : facts.length ? <><dl className={`fact-grid fact-grid--${factColumns}`}>{facts.map(({ icon: Icon, ...fact }) => <div key={fact.label}><dt><Icon size={30} strokeWidth={1.6} aria-hidden="true" />{fact.label}</dt><dd>{fact.value}</dd></div>)}</dl>
-                <p className="fact-source-note">County record details.{facts.length < 8 ? " See the property card for more." : " Verify with the original source."}{property.totalValue != null ? " Tax value is not rebuild cost." : ""}</p></>
-                : <div className="notice limited-record-notice"><FileSearch size={21} /><div><strong>Parcel matched; building details were not supplied.</strong><span>Check the available property card or county website for further details.</span></div></div>}
+            {!property.hasCountyRecord ? (
+              <div className="notice limited-record-notice">
+                <AlertTriangle size={21} />
+                <div>
+                  <strong>Address found. Automatic parcel details are unavailable.</strong>
+                  <span>{response.note || "Use the county search and statewide resources below. No property facts have been assumed."}</span>
+                </div>
+              </div>
+            ) : facts.length ? (
+              <>
+                <dl className={`fact-grid fact-grid--${factColumns}`}>
+                  {facts.map(({ icon: Icon, ...fact }) => (
+                    <div key={fact.label} className={fact.isTaxValue ? "fact-card--tax" : undefined}>
+                      <dt>
+                        <Icon size={28} strokeWidth={1.6} aria-hidden="true" />
+                        {fact.label}
+                      </dt>
+                      <dd>
+                        <span>{fact.value}</span>
+                        {fact.isTaxValue && (
+                          <button
+                            type="button"
+                            className="tax-rebuild-inline-link"
+                            onClick={() => setExpanded((prev) => !prev)}
+                            aria-expanded={expanded}
+                            aria-controls="rebuild-details"
+                          >
+                            Tax value is not rebuild cost
+                            <ExternalLink size={12} aria-hidden="true" />
+                          </button>
+                        )}
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+                {expanded && property.totalValue != null && (
+                  <div id="rebuild-details" className="rebuild-inline-drawer" role="region" aria-label="Tax value versus rebuild cost">
+                    <div className="rebuild-inline-grid">
+                      <div>
+                        <h4>Tax value</h4>
+                        <p>Set by the county to bill property taxes. It includes the land and may reflect a revaluation from several years ago.</p>
+                      </div>
+                      <div>
+                        <h4>Rebuild cost</h4>
+                        <p>Today&apos;s materials and labor to rebuild the same home. The land is not included because you would still own it.</p>
+                      </div>
+                      <div>
+                        <h4>Why they differ</h4>
+                        <p>Building costs change, and older homes can cost more to rebuild than their tax value suggests. Confirm the rebuild figure rather than assuming they match.</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="notice limited-record-notice">
+                <FileSearch size={21} />
+                <div>
+                  <strong>Parcel matched; building details were not supplied.</strong>
+                  <span>Check the available property card or county website for further details.</span>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* PRINT-ONLY STRUCTURED COUNTY RECORD TABLE */}
@@ -372,39 +485,122 @@ export function PropertyReport({ property, response, selectedIndex, onSelect, on
         <ParcelMap property={property} />
       </div>
 
+      {/* 2. FOUR QUICK LINKS */}
       <div id="home-links" className="home-links-section">
-        <h3>Explore this property</h3>
-        <div className="home-links-grid">{shortcuts.map(({ icon: Icon, ...link }) => <a key={link.label} href={link.href} target="_blank" rel="noopener noreferrer">
-          <Icon size={32} strokeWidth={1.6} aria-hidden="true" /><span><strong>{link.label}</strong><small>{link.hint}</small></span><ChevronRight size={18} aria-hidden="true" /><span className="sr-only">Opens in a new tab</span>
-        </a>)}</div>
-      </div>
-
-      <aside className="cta-band" aria-label="Insurance review">
-        <Shield size={44} strokeWidth={1.7} aria-hidden="true" />
-        <div><h3>Know your home. Understand your coverage.</h3><p>Let our local team help review your home insurance.</p></div>
-        <a href={quoteHref}>Request an insurance review <ArrowRight size={18} aria-hidden="true" /></a>
-      </aside>
-    </section>
-
-    <ResourceGroup id="records" eyebrow="County records" title="Assessments, parcel maps & deeds" links={resources.records} />
-    {manualSearch && <aside className="manual-search"><AlertTriangle size={19} /><p>Some county sites require the address or parcel number for a manual search. A matched record does not guarantee a direct GIS link.</p></aside>}
-    <ResourceGroup id="photos-maps" eyebrow="Photos & maps" title="See the home and nearby roads" links={resources.photos} />
-    <ResourceGroup id="hazards" eyebrow="Hazard resources" title="Flood maps & preparedness" links={resources.hazards} />
-    <p className="source-note">Outside websites open in a new tab and may require a search or acknowledgment. Links and public records can change; these resources are not a flood determination.</p>
-
-    {property.totalValue != null && <section className="rebuild-explainer">
-      <div className="rebuild-summary"><div className="section-heading"><p>Understanding the figures</p><h3>Tax value is not rebuild cost</h3></div><button type="button" onClick={() => setExpanded(!expanded)} aria-expanded={expanded} aria-controls="rebuild-details">{expanded ? "Show less" : "Learn why"}{expanded ? <ChevronUp size={17} /> : <ChevronDown size={17} />}</button></div>
-      <p className="section-intro">The assessed value is used for property taxes. Home insurance considers what it would cost to rebuild the home today.</p>
-      <div id="rebuild-details" className={`rebuild-details${expanded ? " is-open" : ""}`} aria-hidden={!expanded}>
-        <div className="rebuild-grid">
-          <div><h4>Tax value</h4><p>Set by the county to bill property taxes. It includes the land and may reflect a revaluation from several years ago.</p></div>
-          <div><h4>Rebuild cost</h4><p>Today's materials and labor to rebuild the same home. The land is not included because you would still own it.</p></div>
-          <div><h4>Why they differ</h4><p>Building costs change, and older homes can cost more to rebuild than their tax value suggests. Confirm the rebuild figure rather than assuming they match.</p></div>
+        <div className="home-links-grid">
+          {shortcuts.map(({ icon: Icon, ...link }) => (
+            <a key={link.label} href={link.href} target="_blank" rel="noopener noreferrer">
+              <Icon size={30} strokeWidth={1.6} aria-hidden="true" />
+              <span>
+                <strong>{link.label}</strong>
+                <small>{link.hint}</small>
+              </span>
+              <ChevronRight size={18} aria-hidden="true" />
+              <span className="sr-only">Opens in a new tab</span>
+            </a>
+          ))}
         </div>
       </div>
-    </section>}
-    <ResourceGroup id="insurance-resources" eyebrow="More home resources" title="Prepare before and after a loss" links={AGENCY_RESOURCES} />
-    <section className="closing-band"><div><p className="eyebrow">Bill Layne Insurance</p><h3>Questions about your home coverage?</h3><p>Our local team can help verify the details carriers use and explain what still needs to be confirmed.</p></div><div className="closing-actions"><a href={quoteHref}>Request an insurance review <ArrowRight size={18} /></a><a href="tel:3368351993"><Phone size={18} />Call 336-835-1993</a></div></section>
+
+      {/* 3. NEW PHOTO BANNER (3:1 Desktop / Dedicated Portrait Mobile) */}
+      <div className="report-photo-banner screen-only" aria-label="A clearer picture of home">
+        <img
+          className="report-banner-desktop"
+          src={IMG_REPORT_BANNER}
+          alt="A clearer picture of home. Explore the records. Understand the details. Plan your protection. Illustrative neighborhood photo."
+          loading="lazy"
+          decoding="async"
+        />
+        <div className="report-banner-mobile">
+          <img
+            className="report-banner-mobile-bg"
+            src={IMG_REPORT_BANNER}
+            alt=""
+            aria-hidden="true"
+            loading="lazy"
+            decoding="async"
+          />
+          <div className="report-banner-mobile-overlay" aria-hidden="true" />
+          <div className="report-banner-mobile-copy">
+            <h3>
+              A clearer picture
+              <br />
+              of home.
+            </h3>
+            <p>Explore the records. Understand the details. Plan your protection.</p>
+            <span className="report-banner-gold-bar" aria-hidden="true" />
+          </div>
+          <span className="report-banner-photo-badge">Illustrative neighborhood photo</span>
+        </div>
+      </div>
+    </section>
+
+    {/* 4. FOUR RESOURCE SECTIONS IN A TWO-COLUMN DESKTOP GRID */}
+    <div className="resource-sections-grid screen-only">
+      <ResourceGroup
+        id="records"
+        title="Property records"
+        subtitle="Official county records and property details."
+        icon={FileText}
+        links={resources.records}
+      />
+      <ResourceGroup
+        id="photos-maps"
+        title="Photos & surroundings"
+        subtitle="See the home and nearby area."
+        icon={Camera}
+        links={resources.photos}
+      />
+      <ResourceGroup
+        id="hazards"
+        title="Flood & preparedness"
+        subtitle="Explore flood maps and emergency resources."
+        icon={Shield}
+        links={resources.hazards}
+      />
+      <ResourceGroup
+        id="insurance-resources"
+        title="Your home toolkit"
+        subtitle="Practical resources to prepare and protect."
+        icon={Briefcase}
+        links={AGENCY_RESOURCES}
+      />
+    </div>
+
+    {manualSearch && (
+      <aside className="manual-search screen-only">
+        <AlertTriangle size={19} />
+        <p>Some county sites require the address or parcel number for a manual search. A matched record does not guarantee a direct GIS link.</p>
+      </aside>
+    )}
+
+    <div className="report-disclaimer-bar screen-only" role="note">
+      <Info size={19} strokeWidth={1.9} aria-hidden="true" />
+      <p>
+        Public records may be incomplete or outdated. Flood resources do not replace an official determination, and insurance quotes require a separate review.
+      </p>
+    </div>
+
+    {/* 5. INSURANCE-REVIEW PANEL */}
+    <section className="closing-band screen-only">
+      <div>
+        <p className="eyebrow">
+          <span className="eyebrow-dash" aria-hidden="true" />
+          BILL LAYNE INSURANCE
+        </p>
+        <h3>Know your home. Understand your coverage.</h3>
+        <p>Our local team can help verify the details carriers use and explain what still needs to be confirmed.</p>
+      </div>
+      <div className="closing-actions">
+        <a href={quoteHref}>
+          Request an insurance review <ArrowRight size={18} aria-hidden="true" />
+        </a>
+        <a href="tel:3368351993">
+          <Phone size={18} aria-hidden="true" />
+          Call 336-835-1993
+        </a>
+      </div>
+    </section>
 
     {/* ==================== PRINT-ONLY LETTERHEAD DOSSIER BODY & FOOTER ==================== */}
     <div className="print-only print-dossier-bottom">

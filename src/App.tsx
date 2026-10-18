@@ -420,7 +420,6 @@ function HomeSearchPage() {
           </a>
 
           <div className="header-actions">
-            {activeProperty && <span className="header-tag">Free property report</span>}
             <a
               className="header-phone"
               href="tel:3368351993"
