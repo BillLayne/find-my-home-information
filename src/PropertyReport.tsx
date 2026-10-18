@@ -25,6 +25,17 @@ function displayAddress(value: string) {
   return value.split(" ").map((word) => KEEP_UPPER.has(word) || /\d/.test(word) ? word : word.charAt(0) + word.slice(1).toLowerCase()).join(" ");
 }
 
+function cleanCountyFeature(value?: string) {
+  if (!value) return undefined;
+  const cleaned = value
+    .replace(/(?:^|\s)[0-9]{1,3}\s*[-:]\s*/g, " ")
+    .replace(/([A-Za-z])\/([A-Za-z])/g, "$1 / $2")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (!cleaned) return undefined;
+  return displayAddress(cleaned);
+}
+
 const formatNumber = (value: number) => new Intl.NumberFormat("en-US").format(value);
 const formatCurrency = (value: number) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(value);
 
@@ -195,22 +206,55 @@ export function PropertyReport({ property, response, selectedIndex, onSelect, on
         ? `Book ${property.deedBook}`
         : undefined;
 
-  const facts = [
+  const cleanExterior = cleanCountyFeature(property.exteriorWall);
+  const cleanRoof = cleanCountyFeature(property.roofCover || property.roofStructure);
+  const cleanFoundationHeat = [
+    cleanCountyFeature(property.foundation),
+    cleanCountyFeature(property.heatingType),
+  ]
+    .filter(Boolean)
+    .join(" · ") || undefined;
+
+  type FactItem = {
+    label: string;
+    icon: typeof MapPin;
+    value: string;
+    isTaxValue?: boolean;
+  };
+
+  const primaryCandidates: Array<{ label: string; icon: typeof MapPin; value?: string; isTaxValue?: boolean }> = [
     { label: "Heated area", icon: Home, value: property.heatedArea ? `${formatNumber(property.heatedArea)} sq ft` : undefined },
     { label: "Year built", icon: CalendarDays, value: property.yearBuilt ? `${property.yearBuilt}${property.effectiveYearBuilt && property.effectiveYearBuilt !== property.yearBuilt ? ` (Eff. ${property.effectiveYearBuilt})` : ""}` : undefined },
     { label: "Acreage", icon: Trees, value: property.totalAcres == null ? undefined : `${formatNumber(property.totalAcres)} ${property.totalAcres === 1 ? "acre" : "acres"}` },
     { label: "Bedrooms", icon: BedDouble, value: property.bedrooms == null ? undefined : String(property.bedrooms) },
     { label: "Bathrooms", icon: Bath, value: property.fullBaths == null ? undefined : `${property.fullBaths} full${property.halfBaths ? `, ${property.halfBaths} half` : ""}` },
     { label: "Tax assessed value", icon: Coins, value: property.totalValue == null ? undefined : formatCurrency(property.totalValue), isTaxValue: true },
+  ];
+
+  const secondaryCandidates: Array<{ label: string; icon: typeof MapPin; value?: string }> = [
     { label: "Building value", icon: Building2, value: property.buildingValue == null ? undefined : formatCurrency(property.buildingValue) },
     { label: "Land value", icon: LandPlot, value: property.landValue == null ? undefined : formatCurrency(property.landValue) },
     { label: "Stories", icon: Layers, value: property.stories == null ? undefined : `${property.stories} ${property.stories === 1 ? "story" : "stories"}` },
-    { label: "Exterior", icon: Layers, value: property.exteriorWall },
-    { label: "Roof", icon: Warehouse, value: property.roofCover || property.roofStructure },
-    { label: "Foundation / Heat", icon: Home, value: [property.foundation, property.heatingType].filter(Boolean).join(" · ") || undefined },
+    { label: "Exterior", icon: Layers, value: cleanExterior },
+    { label: "Roof", icon: Warehouse, value: cleanRoof },
+    { label: "Foundation / Heat", icon: Home, value: cleanFoundationHeat },
     { label: "Deed reference", icon: FileText, value: deedRef },
-  ].filter((fact): fact is { label: string; icon: typeof MapPin; value: string; isTaxValue?: boolean } => Boolean(fact.value));
-  const factColumns = facts.length === 1 ? 1 : facts.length === 2 || facts.length === 4 ? 2 : 3;
+  ];
+
+  const coreFacts = primaryCandidates.filter((fact): fact is FactItem => Boolean(fact.value));
+  const detailFacts = secondaryCandidates.filter((fact): fact is FactItem => Boolean(fact.value));
+
+  // If a parcel only returns 1-2 primary metrics (e.g., commercial or land parcel without bedrooms/baths),
+  // promote Building value and Land value into the primary grid so the top grid stays balanced.
+  if (coreFacts.length < 3 && detailFacts.length > 0) {
+    while (coreFacts.length < 4 && detailFacts.length > 0) {
+      const next = detailFacts.shift();
+      if (next) coreFacts.push(next);
+    }
+  }
+
+  const hasAnyFacts = coreFacts.length > 0 || detailFacts.length > 0;
+  const factColumns = coreFacts.length === 1 ? 1 : coreFacts.length === 2 || coreFacts.length === 4 ? 2 : 3;
   const shortcuts = [
     { ...resources.records[1], label: "Property card", hint: "County records" },
     { ...resources.records[0], label: "GIS & aerial map", hint: "Parcel details" },
@@ -356,14 +400,14 @@ export function PropertyReport({ property, response, selectedIndex, onSelect, on
                   <span>{response.note || "Use the county search and statewide resources below. No property facts have been assumed."}</span>
                 </div>
               </div>
-            ) : facts.length ? (
+            ) : hasAnyFacts ? (
               <>
                 <dl className={`fact-grid fact-grid--${factColumns}`}>
-                  {facts.map(({ icon: Icon, ...fact }) => (
+                  {coreFacts.map(({ icon: Icon, ...fact }) => (
                     <div key={fact.label} className={fact.isTaxValue ? "fact-card--tax" : undefined}>
                       <dt>
-                        <Icon size={28} strokeWidth={1.6} aria-hidden="true" />
-                        {fact.label}
+                        <Icon size={18} strokeWidth={1.75} aria-hidden="true" />
+                        <span>{fact.label}</span>
                       </dt>
                       <dd>
                         <span>{fact.value}</span>
@@ -383,6 +427,24 @@ export function PropertyReport({ property, response, selectedIndex, onSelect, on
                     </div>
                   ))}
                 </dl>
+
+                {detailFacts.length > 0 && (
+                  <div className="fact-details-block">
+                    <p className="fact-details-label">Construction &amp; valuation details</p>
+                    <dl className="fact-grid fact-grid--details">
+                      {detailFacts.map(({ icon: Icon, ...fact }) => (
+                        <div key={fact.label}>
+                          <dt>
+                            <Icon size={17} strokeWidth={1.75} aria-hidden="true" />
+                            <span>{fact.label}</span>
+                          </dt>
+                          <dd>{fact.value}</dd>
+                        </div>
+                      ))}
+                    </dl>
+                  </div>
+                )}
+
                 {expanded && property.totalValue != null && (
                   <div id="rebuild-details" className="rebuild-inline-drawer" role="region" aria-label="Tax value versus rebuild cost">
                     <div className="rebuild-inline-grid">
@@ -471,7 +533,7 @@ export function PropertyReport({ property, response, selectedIndex, onSelect, on
                   </td>
                   <td className="k">Exterior / Roof</td>
                   <td className="v">
-                    {[property.exteriorWall, property.roofCover || property.roofStructure].filter(Boolean).join(" · ") || "Confirm Below"}
+                    {[cleanExterior, cleanRoof].filter(Boolean).join(" · ") || "Confirm Below"}
                   </td>
                 </tr>
               </tbody>

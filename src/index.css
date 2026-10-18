@@ -1710,30 +1710,31 @@ main:focus, .results:focus { outline: none; }
 .fact-grid > div {
   position: relative;
   min-width: 0;
-  min-height: 92px;
-  display: grid;
-  align-content: center;
-  gap: 4px;
-  padding: 14px 12px 14px 56px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 8px;
+  padding: 14px 16px;
   border: 1px solid #E2E8F0;
   border-radius: 12px;
   background: #FFFFFF;
 }
 
 .fact-grid dt {
-  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #64748B;
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 600;
   line-height: 1.3;
 }
 
 .fact-grid dt svg {
-  position: absolute;
-  left: 15px;
-  width: 26px;
-  height: 26px;
-  top: 24px;
-  color: var(--navy);
+  flex-shrink: 0;
+  width: 17px;
+  height: 17px;
+  color: var(--gold);
 }
 
 .fact-grid dd {
@@ -1741,10 +1742,51 @@ main:focus, .results:focus { outline: none; }
   display: grid;
   gap: 4px;
   color: var(--navy);
-  font-size: 20px;
+  font-size: 19px;
   font-weight: 800;
-  line-height: 1.2;
-  overflow-wrap: anywhere;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  word-break: normal;
+  overflow-wrap: break-word;
+  hyphens: none;
+}
+
+.fact-details-block {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid #E2E8F0;
+}
+
+.fact-details-label {
+  margin: 0 0 10px;
+  color: #64748B;
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.fact-grid--details {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.fact-grid--details > div {
+  padding: 12px 15px;
+  gap: 6px;
+  background: #FAFBFD;
+}
+
+.fact-grid--details dt {
+  font-size: 12.5px;
+  color: #64748B;
+}
+
+.fact-grid--details dd {
+  font-size: 15.5px;
+  font-weight: 700;
+  line-height: 1.35;
+  letter-spacing: 0;
 }
 
 .tax-rebuild-inline-link {
@@ -2519,20 +2561,21 @@ main:focus, .results:focus { outline: none; }
     font-size: 24px;
   }
   .fact-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 10px;
   }
-  .fact-grid > div {
-    min-height: 80px;
-    padding: 12px 12px 12px 52px;
+  .fact-grid--1,
+  .fact-grid--details {
+    grid-template-columns: 1fr;
   }
-  .fact-grid dt svg {
-    left: 14px;
-    width: 24px;
-    height: 24px;
+  .fact-grid > div {
+    padding: 12px 14px;
   }
   .fact-grid dd {
     font-size: 18px;
+  }
+  .fact-grid--details dd {
+    font-size: 15px;
   }
   .home-links-section {
     margin-top: 18px;
