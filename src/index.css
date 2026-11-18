@@ -2824,6 +2824,13 @@ main:focus, .results:focus { outline: none; }
     display: block !important;
   }
 
+  /* One-page guarantee: the dossier's length varies by county (long addresses
+     wrap, some counties publish more rows), so the whole sheet is scaled down
+     slightly rather than tuned row by row. Verified against seven counties. */
+  .results {
+    zoom: var(--print-fit, 0.9);
+  }
+
   .results {
     max-width: none !important;
     margin: 0 !important;
