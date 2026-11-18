@@ -4,7 +4,7 @@ import type { PublicProperty, PublicPropertyResponse } from "../shared/property"
 import { destinationKind, destinationLabel, propertyShareUrl, type DestinationKind } from "./lib/report";
 import { ParcelMap } from "./ParcelMap";
 
-const IMG_REPORT_BANNER = "https://img.billlayneinsurance.com/i/2026/10/a-clearer-picture-of-home-p9t9ps.webp";
+const IMG_REPORT_BANNER = "https://img.billlayneinsurance.com/cdn-cgi/image/width=1400,quality=75,format=auto/i/2026/10/a-clearer-picture-of-home-p9t9ps.webp";
 
 type ResourceLink = {
   label: string; description: string; href?: string; icon: typeof MapPin;

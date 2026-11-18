@@ -23,13 +23,16 @@ import { LegalPage } from "./LegalPage";
 import { PropertyReport } from "./PropertyReport";
 
 const IMG_AGENCY_LOGO = "/agency-logo.png";
-const IMG_DESKTOP_HERO = "https://img.billlayneinsurance.com/i/2026/10/desktop-hero-ujbrhm.webp";
-const IMG_MOBILE_HERO = "https://img.billlayneinsurance.com/i/2026/10/mobile-hero-4tkayf.webp";
-const IMG_PROPERTY_PREVIEW = "https://img.billlayneinsurance.com/i/2026/10/property-preview-p68nus.webp";
-const IMG_AERIAL_MAP = "https://img.billlayneinsurance.com/i/2026/10/aerial-map-j7tf9j.webp";
-const IMG_FLOOD_RESOURCES = "https://img.billlayneinsurance.com/i/2026/10/flood-resources-zzdcxg.webp";
-const IMG_HOME_INVENTORY = "https://img.billlayneinsurance.com/i/2026/10/home-inventory-q8z447.webp";
-const IMG_MOUNTAIN_CONTACT = "https://img.billlayneinsurance.com/i/2026/09/bill-layne-agency-hero-background-xh5eb5.webp";
+// Served through the image host's resizer so phones are not sent full-size
+// originals (the originals are 200-500 KB each).
+const sized = (path: string, width: number) => `https://img.billlayneinsurance.com/cdn-cgi/image/width=${width},quality=75,format=auto/i/${path}`;
+const IMG_DESKTOP_HERO = sized("2026/10/desktop-hero-ujbrhm.webp", 1920);
+const IMG_MOBILE_HERO = sized("2026/10/mobile-hero-4tkayf.webp", 800);
+const IMG_PROPERTY_PREVIEW = sized("2026/10/property-preview-p68nus.webp", 900);
+const IMG_AERIAL_MAP = sized("2026/10/aerial-map-j7tf9j.webp", 900);
+const IMG_FLOOD_RESOURCES = sized("2026/10/flood-resources-zzdcxg.webp", 900);
+const IMG_HOME_INVENTORY = sized("2026/10/home-inventory-q8z447.webp", 900);
+const IMG_MOUNTAIN_CONTACT = "https://img.billlayneinsurance.com/i/2026/09/bill-layne-agency-hero-background-xh5eb5.webp"; // already small
 
 const SAMPLE_DEMO_ADDRESS = "1283 N Bridge St, Elkin, NC 28621";
 
