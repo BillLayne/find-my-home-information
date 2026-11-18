@@ -2761,6 +2761,10 @@ main:focus, .results:focus { outline: none; }
   display: none;
 }
 
+/* Print-only parcel map: kept off-screen at its printed size so its tiles are
+   loaded before the customer opens the print dialog. */
+.parcel-map-print { position: absolute; left: -10000px; top: 0; width: 360px; height: 162px; background: #e3eaed; }
+
 @media print {
   @page {
     size: letter portrait;
@@ -3032,11 +3036,27 @@ main:focus, .results:focus { outline: none; }
     line-height: 1.3;
   }
 
-  .parcel-map-frame,
-  .parcel-map {
+  .parcel-map-frame {
+    display: flex !important;
+    justify-content: center !important;
+    overflow: hidden !important;
     min-height: 162px !important;
     height: 162px !important;
     max-height: 162px !important;
+  }
+
+  .parcel-map {
+    display: none !important;
+  }
+
+  .parcel-map-print {
+    position: static !important;
+    flex: 0 0 360px !important;
+  }
+
+  .parcel-map-print .leaflet-control-attribution {
+    font-size: 6.5pt !important;
+    padding: 1px 4px !important;
   }
 
   .parcel-map .leaflet-control-attribution {

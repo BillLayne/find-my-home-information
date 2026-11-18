@@ -143,6 +143,17 @@ function normalizeStreetAddress(value: string) {
     .replace(/[^A-Z0-9]/g, "");
 }
 
+// Some counties (Haywood) store the city, state and ZIP in the same field as
+// the street, with no comma. That is the same address, not a different one, so
+// a record that is the searched street followed only by "... NC <zip>" matches.
+function streetAddressDiffers(official: string, searched: string) {
+  const a = normalizeStreetAddress(official);
+  const b = normalizeStreetAddress(searched);
+  if (a === b) return false;
+  const [shorter, longer] = a.length <= b.length ? [a, b] : [b, a];
+  return !(shorter.length >= 4 && longer.startsWith(shorter) && /^[A-Z]*NC\d{5}(\d{4})?$/.test(longer.slice(shorter.length)));
+}
+
 export function buildFemaLink(address: string) {
   return `https://msc.fema.gov/portal/search?AddressQuery=${encodeURIComponent(address)}`;
 }
@@ -166,7 +177,7 @@ export function buildPublicPropertyResponse(raw: unknown, inputAddress: string, 
       pin,
       officialAddress,
       searchedAddress: formattedAddress,
-      recordAddressDiffers: normalizeStreetAddress(officialAddress) !== normalizeStreetAddress(formattedAddress),
+      recordAddressDiffers: streetAddressDiffers(officialAddress, formattedAddress),
       totalAcres: number(item.totalAcres),
       landValue: number(item.landValue),
       buildingValue: number(item.buildingValue),

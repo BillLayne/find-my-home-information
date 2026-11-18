@@ -95,3 +95,12 @@ test("maps Watauga facts and official links without copying private owner fields
   assert.equal("owner" in property, false);
   assert.equal("mailingAddress" in property, false);
 });
+
+test("a county record that appends city, state and ZIP to the street is the same address", () => {
+  const same = buildPublicPropertyResponse({ results: [{ county: "Haywood", parcelId: "8615-26-9252", siteAddress: "163 S MAIN ST WAYNESVILLE NC 28786" }] }, "163 S Main St, Waynesville, North Carolina, 28786").results[0];
+  assert.equal(same.recordAddressDiffers, false);
+  const different = buildPublicPropertyResponse({ results: [{ county: "Wake", parcelId: "1703576955", siteAddress: "330 S SALISBURY ST" }] }, "300 S Salisbury St, Raleigh, NC 27601").results[0];
+  assert.equal(different.recordAddressDiffers, true);
+  const longerStreet = buildPublicPropertyResponse({ results: [{ county: "Surry", parcelId: "123456", siteAddress: "12 OAK STATION RD" }] }, "12 Oak St, Elkin, NC 28621").results[0];
+  assert.equal(longerStreet.recordAddressDiffers, true);
+});
