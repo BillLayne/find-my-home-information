@@ -19,9 +19,11 @@ export function destinationKind(href: string | undefined, property?: PublicPrope
     const ids = [property?.parcelId, property?.pin].filter((id): id is string => Boolean(id));
     if (ids.some((id) => compact(id).length >= 5 && candidates.includes(compact(id)))) return "record";
     // Some county viewers append their own suffix to the parcel number
-    // (Iredell: /properties/4710927803.000-ADD26011). A long id at the start of
-    // a URL segment is still this property's record.
-    if (ids.some((id) => compact(id).length >= 8 && candidates.some((candidate) => candidate.startsWith(compact(id))))) return "record";
+    // (Iredell: /properties/4710927803.000-ADD26011). Accept that only when the
+    // exact id is followed by a separator and a letter, so a longer number that
+    // merely begins with this parcel's digits is never mistaken for it.
+    const segments = decodeURIComponent(url.pathname).split("/").map((segment) => segment.toLowerCase());
+    if (ids.some((id) => compact(id).length >= 8 && segments.some((segment) => segment.startsWith(id.toLowerCase()) && /^[-_][a-z]/.test(segment.slice(id.length))))) return "record";
     const addressKeys = ["addressquery", "address", "query", "q", "searchtext"];
     if ([...url.searchParams].some(([key, value]) => addressKeys.includes(key.toLowerCase()) && /\d/.test(value) && /[a-z]/i.test(value))) return "search";
     if ((url.hostname === "zillow.com" || url.hostname.endsWith(".zillow.com")) && /\/homes\/.+_rb\/?$/.test(url.pathname)) return "search";
