@@ -43,3 +43,9 @@ test("shared reports use only the current public address and parcel", () => {
   assert.equal(url.searchParams.has("unrelated"), false);
   assert.equal(url.hash, "");
 });
+
+test("a parcel number followed by a county suffix is still a property-specific link", () => {
+  const iredell = buildPublicPropertyResponse({ results: [{ county: "Iredell", parcelId: "4710927803.000", siteAddress: "296 HERONWOOD RD" }] }, "296 Heronwood Rd, Statesville, NC").results[0];
+  assert.equal(destinationKind("https://iredellcountync.mapgeo.io/datasets/properties/4710927803.000-ADD26011", iredell), "record");
+  assert.equal(destinationKind("https://iredellcountync.mapgeo.io/datasets/properties?abuttersDistance=100", iredell), "website");
+});

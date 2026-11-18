@@ -1874,7 +1874,8 @@ main:focus, .results:focus { outline: none; }
 
 .home-links-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  /* Fill the row whether a county supplies three shortcuts or four. */
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 16px;
 }
 
